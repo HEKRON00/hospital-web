@@ -39,10 +39,10 @@ app.get('/api/doctores', async (req, res) => {
 });
 
 // Especialidades
-app.get('/api/especialidades', async (req, res) => {
+app.get('/api/Enfermeros', async (req, res) => {
   try {
     const pool = await sql.connect(config);
-    const result = await pool.request().query('SELECT * FROM dbo.Especialidades');
+    const result = await pool.request().query('SELECT * FROM dbo.Enfermeros');
     res.json(result.recordset);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -50,10 +50,10 @@ app.get('/api/especialidades', async (req, res) => {
 });
 
 // Ingresos
-app.get('/api/ingresos', async (req, res) => {
+app.get('/api/Medicamentos', async (req, res) => {
   try {
     const pool = await sql.connect(config);
-    const result = await pool.request().query('SELECT * FROM dbo.Ingresos');
+    const result = await pool.request().query('SELECT * FROM dbo.Medicamentos');
     res.json(result.recordset);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -61,10 +61,10 @@ app.get('/api/ingresos', async (req, res) => {
 });
 
 // Alergias
-app.get('/api/alergias', async (req, res) => {
+app.get('/api/Citas', async (req, res) => {
   try {
     const pool = await sql.connect(config);
-    const result = await pool.request().query('SELECT * FROM dbo.Alergias');
+    const result = await pool.request().query('SELECT * FROM dbo.Citas');
     res.json(result.recordset);
   } catch (err) {
     res.status(500).json({ error: err.message });
