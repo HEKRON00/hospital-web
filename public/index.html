@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Hospital DB</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f0f4f8; }
+    h1 { color: #2c3e50; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    button {
+      padding: 10px 20px; border: none; border-radius: 6px;
+      background: #3498db; color: white; cursor: pointer; font-size: 14px;
+    }
+    button:hover { background: #2980b9; }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
+    th { background: #2c3e50; color: white; padding: 12px; text-align: left; }
+    td { padding: 10px 12px; border-bottom: 1px solid #eee; }
+    tr:hover { background: #f9f9f9; }
+  </style>
+</head>
+<body>
+
+  <h1>🏥 Sistema Hospital</h1>
+
+  <div class="tabs">
+    <button onclick="cargar('Pacientes')">👤 Pacientes</button>
+    <button onclick="cargar('Doctores')">🩺 Doctores</button>
+    <button onclick="cargar('Enfermeros')">📋 Enfermeros</button>
+    <button onclick="cargar('Medicamentos')">🏨 Medicamentos</button>
+    <button onclick="cargar('Citas')">⚠️ Citas</button>
+  </div>
+
+  <div id="contenido"></div>
+
+  <script>
+    async function cargar(seccion) {
+      const res = await fetch(`/api/${seccion}`);
+      const datos = await res.json();
+
+      if (datos.error) {
+        document.getElementById('contenido').innerHTML = `<p style="color:red">Error: ${datos.error}</p>`;
+        return;
+      }
+
+      if (!datos.length) {
+        document.getElementById('contenido').innerHTML = '<p>No hay datos.</p>';
+        return;
+      }
+
+      const columnas = Object.keys(datos[0]);
+      let html = '<table><tr>';
+      columnas.forEach(col => html += `<th>${col}</th>`);
+      html += '</tr>';
+
+      datos.forEach(fila => {
+        html += '<tr>';
+        columnas.forEach(col => html += `<td>${fila[col] ?? ''}</td>`);
+        html += '</tr>';
+      });
+
+      html += '</table>';
+      document.getElementById('contenido').innerHTML = html;
+    }
+  </script>
+
+</body>
+</html>
