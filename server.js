@@ -5,13 +5,13 @@ const app = express();
 app.use(express.static('public'));
 
 const config = {
-  server: 'DESKTOP-0FM4F7O',
-  database: 'DB_ANDAGON',
-  user: 'hospital_user',
+  server: 'db-andagon.database.windows.net',
+  database: 'HOSPITAL_DB',
+  user: 'admin_uth',
   password: 'Hospital123!',
   options: {
-    encrypt: false,
-    trustServerCertificate: true
+    encrypt: true,
+    trustServerCertificate: false
   }
 };
 
