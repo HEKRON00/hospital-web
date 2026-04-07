@@ -2,66 +2,126 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Hospital DB</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema Hospital</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f0f4f8; }
-    h1 { color: #2c3e50; }
-    .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-    button {
-      padding: 10px 20px; border: none; border-radius: 6px;
-      background: #3498db; color: white; cursor: pointer; font-size: 14px;
-    }
-    button:hover { background: #2980b9; }
-    table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
-    th { background: #2c3e50; color: white; padding: 12px; text-align: left; }
-    td { padding: 10px 12px; border-bottom: 1px solid #eee; }
-    tr:hover { background: #f9f9f9; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f0f7f4; min-height: 100vh; }
+    .header { background: #0F6E56; padding: 0; }
+    .header-inner { max-width: 1100px; margin: 0 auto; padding: 18px 28px; display: flex; align-items: center; gap: 14px; }
+    .header h1 { color: white; font-size: 20px; font-weight: 600; }
+    .header p { color: rgba(255,255,255,0.7); font-size: 13px; margin-top: 2px; }
+    .main { max-width: 1100px; margin: 0 auto; padding: 28px; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .stat { background: white; border-radius: 8px; border: 1px solid #e0ede9; padding: 14px 16px; }
+    .stat-label { font-size: 12px; color: #666; margin-bottom: 4px; }
+    .stat-val { font-size: 22px; font-weight: 600; color: #0F6E56; }
+    .nav { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+    .nav-btn { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 8px; border: 1.5px solid #0F6E56; background: white; color: #0F6E56; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+    .nav-btn:hover { background: #E1F5EE; }
+    .nav-btn.active { background: #0F6E56; color: white; }
+    .card { background: white; border-radius: 12px; border: 1px solid #e0ede9; overflow: hidden; }
+    .card-header { padding: 16px 20px; border-bottom: 1px solid #e0ede9; display: flex; align-items: center; justify-content: space-between; }
+    .card-title { font-size: 15px; font-weight: 600; color: #1a1a1a; }
+    .badge { background: #E1F5EE; color: #085041; font-size: 12px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    thead tr { background: #f8fdfb; }
+    th { padding: 11px 16px; text-align: left; font-weight: 600; font-size: 12px; color: #0F6E56; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e0ede9; }
+    td { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; color: #333; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fdfb; }
+    .empty, .loading { padding: 48px 20px; text-align: center; color: #888; font-size: 14px; }
+    .error { padding: 14px 20px; background: #FCEBEB; color: #A32D2D; font-size: 13px; border-left: 3px solid #E24B4A; }
   </style>
 </head>
 <body>
 
-  <h1>🏥 Sistema Hospital</h1>
+<div class="header">
+  <div class="header-inner">
+    <div>
+      <h1>🏥 Sistema Hospital</h1>
+      <p>Panel de gestión hospitalaria</p>
+    </div>
+  </div>
+</div>
 
-  <div class="tabs">
-    <button onclick="cargar('Pacientes')">👤 Pacientes</button>
-    <button onclick="cargar('Doctores')">🩺 Doctores</button>
-    <button onclick="cargar('Enfermeros')">📋 Enfermeros</button>
-    <button onclick="cargar('Medicamentos')">🏨 Medicamentos</button>
-    <button onclick="cargar('Citas')">⚠️ Citas</button>
+<div class="main">
+  <div class="stats">
+    <div class="stat"><div class="stat-label">Pacientes</div><div class="stat-val" id="s-pacientes">—</div></div>
+    <div class="stat"><div class="stat-label">Doctores</div><div class="stat-val" id="s-doctores">—</div></div>
+    <div class="stat"><div class="stat-label">Especialidades</div><div class="stat-val" id="s-especialidades">—</div></div>
+    <div class="stat"><div class="stat-label">Ingresos</div><div class="stat-val" id="s-ingresos">—</div></div>
+    <div class="stat"><div class="stat-label">Alergias</div><div class="stat-val" id="s-alergias">—</div></div>
   </div>
 
-  <div id="contenido"></div>
+  <div class="nav">
+    <button class="nav-btn active" onclick="cargar('pacientes', this)">👤 Pacientes</button>
+    <button class="nav-btn" onclick="cargar('doctores', this)">🩺 Doctores</button>
+    <button class="nav-btn" onclick="cargar('Enfermeros', this)">📋 Enfermeros</button>
+    <button class="nav-btn" onclick="cargar('Medicamentos', this)">🏨 Medicamentos</button>
+    <button class="nav-btn" onclick="cargar('Citas', this)">⚠️ Citas</button>
+  </div>
 
-  <script>
-    async function cargar(seccion) {
-      const res = await fetch(`/api/${seccion}`);
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title" id="card-title">Pacientes</div>
+      <span class="badge" id="count-badge">0 registros</span>
+    </div>
+    <div id="contenido"><div class="loading">Cargando datos...</div></div>
+  </div>
+</div>
+
+<script>
+  async function cargarStat(sec) {
+    try {
+      const r = await fetch('/api/' + sec);
+      const d = await r.json();
+      const el = document.getElementById('s-' + sec);
+      if (el && Array.isArray(d)) el.textContent = d.length;
+    } catch(e) {}
+  }
+
+  async function cargar(seccion, btn) {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    document.getElementById('card-title').textContent = seccion.charAt(0).toUpperCase() + seccion.slice(1);
+    document.getElementById('contenido').innerHTML = '<div class="loading">Cargando datos...</div>';
+
+    try {
+      const res = await fetch('/api/' + seccion);
       const datos = await res.json();
 
       if (datos.error) {
-        document.getElementById('contenido').innerHTML = `<p style="color:red">Error: ${datos.error}</p>`;
+        document.getElementById('contenido').innerHTML = '<div class="error">Error: ' + datos.error + '</div>';
+        document.getElementById('count-badge').textContent = 'Error';
         return;
       }
+
+      document.getElementById('count-badge').textContent = datos.length + ' registro' + (datos.length !== 1 ? 's' : '');
 
       if (!datos.length) {
-        document.getElementById('contenido').innerHTML = '<p>No hay datos.</p>';
+        document.getElementById('contenido').innerHTML = '<div class="empty">No hay registros en esta tabla.</div>';
         return;
       }
 
-      const columnas = Object.keys(datos[0]);
-      let html = '<table><tr>';
-      columnas.forEach(col => html += `<th>${col}</th>`);
-      html += '</tr>';
-
+      const cols = Object.keys(datos[0]);
+      let html = '<div style="overflow-x:auto"><table><thead><tr>';
+      cols.forEach(c => html += '<th>' + c + '</th>');
+      html += '</tr></thead><tbody>';
       datos.forEach(fila => {
         html += '<tr>';
-        columnas.forEach(col => html += `<td>${fila[col] ?? ''}</td>`);
+        cols.forEach(c => html += '<td>' + (fila[c] ?? '') + '</td>');
         html += '</tr>';
       });
-
-      html += '</table>';
+      html += '</tbody></table></div>';
       document.getElementById('contenido').innerHTML = html;
+    } catch(err) {
+      document.getElementById('contenido').innerHTML = '<div class="error">Error de conexión: ' + err.message + '</div>';
     }
-  </script>
+  }
 
+  ['pacientes','doctores','especialidades','ingresos','alergias'].forEach(cargarStat);
+  cargar('pacientes', document.querySelector('.nav-btn'));
+</script>
 </body>
 </html>
