@@ -1,5 +1,6 @@
 const express = require('express');
 const sql = require('mssql');
+const path = require('path');
 
 const app = express();
 app.use(express.static('public'));
@@ -37,49 +38,46 @@ app.get('/api/doctores', async (req, res) => {
   }
 });
 
-// Enfermeros
-app.get('/api/Enfermeros', async (req, res) => {
+// Especialidades
+app.get('/api/especialidades', async (req, res) => {
   try {
     const pool = await sql.connect(config);
-    const result = await pool.request().query('SELECT * FROM dbo.Enfermeros');
+    const result = await pool.request().query('SELECT * FROM dbo.Especialidades');
     res.json(result.recordset);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Medicamentosapp.get('/api/Medicamentos', async (req, res) => {
-    app.get('/api/Medicamentos', async (req, res) => {
+// Ingresos
+app.get('/api/ingresos', async (req, res) => {
   try {
     const pool = await sql.connect(config);
-    const result = await pool.request().query('SELECT * FROM dbo.Medicamentos');
+    const result = await pool.request().query('SELECT * FROM dbo.Ingresos');
     res.json(result.recordset);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Citas
-app.get('/api/Citas', async (req, res) => {
+// Alergias
+app.get('/api/alergias', async (req, res) => {
   try {
     const pool = await sql.connect(config);
-    const result = await pool.request().query(`
-    SELECT 
-        cita_id, 
-        paciente_id, 
-        doctor_id, 
-        fecha_cita, 
-        FORMAT(CAST(hora_cita AS datetime), 'hh:mm tt') AS hora_cita, 
-        Estado_Id, 
-        proposito 
-    FROM dbo.Citas
-`);
+    const result = await pool.request().query('SELECT * FROM dbo.Alergias');
     res.json(result.recordset);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-app.listen(3000, () => {
+// Servir index.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.listen(3000, '0.0.0.0', () => {
   console.log('Servidor corriendo en http://localhost:3000');
 });
+
+module.exports = app;
