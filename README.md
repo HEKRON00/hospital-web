@@ -1,6 +1,6 @@
 # 🏥 Sistema Hospitalario ANDAGON
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)
 ![Estado](https://img.shields.io/badge/estado-FINALIZADO-brightgreen.svg)
 ![Node.js](https://img.shields.io/badge/Node.js-18.x-green.svg)
 ![Express](https://img.shields.io/badge/Express-4.x-lightgrey.svg)
@@ -36,7 +36,7 @@ El **Sistema Hospitalario ANDAGON** es una aplicación web completa para la gest
 
 Desarrollado como proyecto universitario para la **Universidad Tecnológica de Honduras (UTH)**, el sistema implementa una arquitectura de tres capas con **Node.js + Express** como backend, **Azure SQL Database** como base de datos y un frontend responsive con **HTML5, CSS3 y JavaScript** puro.
 
-> 🌐 **Aplicación en producción:** [https://hospital-web.vercel.app](https://hospital-web.vercel.app)
+> 🌐 **Aplicación en producción:** [https://hospital-web-sand.vercel.app/](https://hospital-web-sand.vercel.app/)
 
 ---
 
@@ -82,18 +82,21 @@ Desarrollado como proyecto universitario para la **Universidad Tecnológica de H
 
 ---
 ## 📁 Estructura del Proyecto
-BD_HOSPITAL/
-├── server.js # Backend principal (Node.js + Express)
-├── package.json # Dependencias y scripts
-├── vercel.json # Configuración para despliegue en Vercel
-├── .gitignore # Archivos ignorados por Git
-└── public/
-├── login.html # Página de autenticación
-├── index.html # Panel principal del sistema
-└── css/
-├── estilo.css # Tema claro
-├── estilo-oscuro.css # Tema oscuro
-└── login.css # Estilos del login
+
+| Archivo / Carpeta | Descripción |
+|-------------------|-------------|
+| `server.js` | Backend principal (Node.js + Express) |
+| `package.json` | Dependencias y scripts |
+| `vercel.json` | Configuración para despliegue en Vercel |
+| `.gitignore` | Archivos ignorados por Git |
+| `public/` | Carpeta de archivos públicos |
+| `├── login.html` | Página de autenticación |
+| `├── index.html` | Panel principal del sistema |
+| `└── css/` | Carpeta de estilos |
+| `    ├── estilo.css` | Tema claro |
+| `    ├── estilo-oscuro.css` | Tema oscuro |
+| `    └── login.css` | Estilos del login |
+
 ---
 
 ## 🚀 Despliegue en Vercel
@@ -102,7 +105,7 @@ El sistema está desplegado en **Vercel** con integración continua desde **GitH
 
 | Plataforma | URL |
 |-----------|-----|
-| 🌐 **Producción** | [https://hospital-web.vercel.app](https://hospital-web.vercel.app) |
+| 🌐 **Producción** | [https://hospital-web-sand.vercel.app/](https://hospital-web-sand.vercel.app/) |
 | 📁 **Repositorio** | [https://github.com/HEKRON00/hospital-web](https://github.com/HEKRON00/hospital-web) |
 
 ### Variables de Entorno (Vercel)
@@ -124,8 +127,8 @@ El sistema cuenta con **login por roles**:
 
 | Usuario | Contraseña | Rol | Permisos |
 |---------|-----------|-----|----------|
-| `admin` | `admin123` | **Administrador** | ✅ CRUD completo en todos los módulos |
-| `invitado` | `invitado123` | **Invitado** | 👁️ Solo lectura (vistas) |
+| `Fredy` | `FHGG` | **Administrador** | ✅ CRUD completo en todos los módulos |
+| `Invitado` | `invitado123` | **Invitado** | 👁️ Solo lectura (vistas) |
 
 > 🔒 Las rutas POST, PUT y DELETE están protegidas con middleware de autenticación.
 
