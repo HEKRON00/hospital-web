@@ -377,7 +377,7 @@ app.get('/api/Citas', async (req, res) => {
         c.cita_id AS ID,
         p.primer_nombre + ' ' + p.apellido AS Paciente,
         ISNULL(d.primer_nombre + ' ' + d.apellido, 'No asignado') AS Doctor,
-        c.fecha_cita AS Fecha,
+        CONVERT(VARCHAR(10), c.fecha_cita, 120) AS Fecha,
         CONVERT(VARCHAR(5), c.hora_cita, 108) AS Hora,
         ISNULL(e.Nombre_Estado, 'Pendiente') AS Estado,
         c.proposito AS Propósito
