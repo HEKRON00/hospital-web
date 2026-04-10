@@ -344,26 +344,24 @@ app.post('/api/Enfermeras', async (req, res) => {
   }
 });
 
-app.post('/api/Medicamentos', async (req, res) => {
+app.get('/api/Medicamentos', async (req, res) => {
   try {
-    const { nombre, marca, tipo, dosis, stock } = req.body;
     const pool = await sql.connect(config);
-    
-    await pool.request()
-      .input('nombre', sql.NVarChar, nombre)
-      .input('marca', sql.NVarChar, marca || null)
-      .input('tipo', sql.NVarChar, tipo || null)
-      .input('dosis', sql.NVarChar, dosis || null)
-      .input('cantidad_stock', sql.Int, stock || 0)
-      .query(`
-        INSERT INTO dbo.Medicamentos 
-        (nombre, marca, tipo, dosis, cantidad_stock) 
-        VALUES (@nombre, @marca, @tipo, @dosis, @cantidad_stock)
-      `);
-    
-    res.json({ success: true, message: 'Medicamento agregado correctamente' });
+    const result = await pool.request().query(`
+      SELECT 
+        medicamento_id AS ID,
+        nombre AS Nombre,
+        marca AS Marca,
+        tipo AS Tipo,
+        dosis AS Dosis,
+        cantidad_stock AS Stock,
+        fecha_vencimiento AS Vencimiento
+      FROM dbo.Medicamentos
+      ORDER BY medicamento_id ASC   -- ← Ordenado por ID (más reciente primero = mayor ID)
+    `);
+    res.json(result.recordset);
   } catch (err) {
-    console.error('Error en POST /api/Medicamentos:', err.message);
+    console.error('Error en /api/Medicamentos:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -371,33 +369,27 @@ app.post('/api/Medicamentos', async (req, res) => {
 // ==========================================================
 // INSERTAR CITAS
 // ==========================================================
-app.post('/api/Citas', async (req, res) => {
+app.get('/api/Citas', async (req, res) => {
   try {
-    const { paciente_id, doctor_id, fecha_cita, hora_cita, proposito } = req.body;
     const pool = await sql.connect(config);
-    
-    // Asegurar que la hora tenga formato correcto (HH:MM:SS)
-    let horaFormateada = hora_cita;
-    if (hora_cita && !hora_cita.includes(':')) {
-      horaFormateada = hora_cita + ':00';
-    }
-    
-    await pool.request()
-      .input('paciente_id', sql.Int, paciente_id)
-      .input('doctor_id', sql.Int, doctor_id || null)
-      .input('fecha_cita', sql.Date, fecha_cita)
-      .input('hora_cita', sql.NVarChar, horaFormateada)  // Enviar como string
-      .input('Estado_Id', sql.Int, 1)  // 1 = Pendiente
-      .input('proposito', sql.NVarChar, proposito || null)
-      .query(`
-        INSERT INTO dbo.Citas 
-        (paciente_id, doctor_id, fecha_cita, hora_cita, Estado_Id, proposito) 
-        VALUES (@paciente_id, @doctor_id, @fecha_cita, @hora_cita, @Estado_Id, @proposito)
-      `);
-    
-    res.json({ success: true, message: 'Cita agregada correctamente' });
+    const result = await pool.request().query(`
+      SELECT 
+        c.cita_id AS ID,
+        p.primer_nombre + ' ' + p.apellido AS Paciente,
+        ISNULL(d.primer_nombre + ' ' + d.apellido, 'No asignado') AS Doctor,
+        c.fecha_cita AS Fecha,
+        c.hora_cita AS Hora,
+        ISNULL(e.Nombre_Estado, 'Pendiente') AS Estado,
+        c.proposito AS Propósito
+      FROM dbo.Citas c
+      JOIN dbo.Pacientes p ON c.paciente_id = p.paciente_id
+      LEFT JOIN dbo.Doctores d ON c.doctor_id = d.doctor_id
+      LEFT JOIN dbo.Cat_Estados e ON c.Estado_Id = e.Estado_Id
+      ORDER BY c.cita_id DESC   -- ← Ordenado por ID descendente (más recientes primero)
+    `);
+    res.json(result.recordset);
   } catch (err) {
-    console.error('Error en POST /api/Citas:', err.message);
+    console.error('Error en /api/Citas:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
