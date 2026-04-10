@@ -369,6 +369,34 @@ app.post('/api/Medicamentos', async (req, res) => {
 });
 
 // ==========================================================
+// INSERTAR CITAS
+// ==========================================================
+app.post('/api/Citas', async (req, res) => {
+  try {
+    const { paciente_id, doctor_id, fecha_cita, hora_cita, estado_id, proposito } = req.body;
+    const pool = await sql.connect(config);
+    
+    await pool.request()
+      .input('paciente_id', sql.Int, paciente_id)
+      .input('doctor_id', sql.Int, doctor_id || null)
+      .input('fecha_cita', sql.Date, fecha_cita)
+      .input('hora_cita', sql.Time, hora_cita)
+      .input('Estado_Id', sql.Int, estado_id || 1)  // Por defecto: 1 = Pendiente
+      .input('proposito', sql.NVarChar, proposito || null)
+      .query(`
+        INSERT INTO dbo.Citas 
+        (paciente_id, doctor_id, fecha_cita, hora_cita, Estado_Id, proposito) 
+        VALUES (@paciente_id, @doctor_id, @fecha_cita, @hora_cita, @Estado_Id, @proposito)
+      `);
+    
+    res.json({ success: true, message: 'Cita agregada correctamente' });
+  } catch (err) {
+    console.error('Error en POST /api/Citas:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ==========================================================
 // INICIAR SERVIDOR
 // ==========================================================
 const PORT = process.env.PORT || 3000;
