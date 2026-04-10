@@ -157,17 +157,25 @@ app.post('/api/pacientes', async (req, res) => {
 
 app.post('/api/doctores', async (req, res) => {
   try {
-    const { nombre, apellido, especialidad, telefono, correo } = req.body;
+    const { nombre, apellido, especialidad, telefono, correo, horario } = req.body;
     const pool = await sql.connect(config);
+    
     await pool.request()
       .input('primer_nombre', sql.NVarChar, nombre)
       .input('apellido', sql.NVarChar, apellido)
       .input('especialidad', sql.NVarChar, especialidad)
       .input('numero_contacto', sql.NVarChar, telefono || null)
       .input('correo_electronico', sql.NVarChar, correo || null)
-      .query(`INSERT INTO dbo.Doctores (primer_nombre, apellido, especialidad, numero_contacto, correo_electronico) VALUES (@primer_nombre, @apellido, @especialidad, @numero_contacto, @correo_electronico)`);
-    res.json({ success: true });
+      .input('horario_disponible', sql.NVarChar, horario || null)
+      .query(`
+        INSERT INTO dbo.Doctores 
+        (primer_nombre, apellido, especialidad, numero_contacto, correo_electronico, horario_disponible) 
+        VALUES (@primer_nombre, @apellido, @especialidad, @numero_contacto, @correo_electronico, @horario_disponible)
+      `);
+    
+    res.json({ success: true, message: 'Doctor agregado correctamente' });
   } catch (err) {
+    console.error('Error en POST /api/doctores:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
