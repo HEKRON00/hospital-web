@@ -373,15 +373,21 @@ app.post('/api/Medicamentos', async (req, res) => {
 // ==========================================================
 app.post('/api/Citas', async (req, res) => {
   try {
-    const { paciente_id, doctor_id, fecha_cita, hora_cita, estado_id, proposito } = req.body;
+    const { paciente_id, doctor_id, fecha_cita, hora_cita, proposito } = req.body;
     const pool = await sql.connect(config);
+    
+    // Asegurar que la hora tenga formato correcto (HH:MM:SS)
+    let horaFormateada = hora_cita;
+    if (hora_cita && !hora_cita.includes(':')) {
+      horaFormateada = hora_cita + ':00';
+    }
     
     await pool.request()
       .input('paciente_id', sql.Int, paciente_id)
       .input('doctor_id', sql.Int, doctor_id || null)
       .input('fecha_cita', sql.Date, fecha_cita)
-      .input('hora_cita', sql.Time, hora_cita)
-      .input('Estado_Id', sql.Int, estado_id || 1)  // Por defecto: 1 = Pendiente
+      .input('hora_cita', sql.NVarChar, horaFormateada)  // Enviar como string
+      .input('Estado_Id', sql.Int, 1)  // 1 = Pendiente
       .input('proposito', sql.NVarChar, proposito || null)
       .query(`
         INSERT INTO dbo.Citas 
