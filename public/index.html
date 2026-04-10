@@ -3,96 +3,156 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema Hospital</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, sans-serif; background: #f0f7f4; min-height: 100vh; }
-    .header { background: #0F6E56; padding: 0; }
-    .header-inner { max-width: 1100px; margin: 0 auto; padding: 18px 28px; display: flex; align-items: center; gap: 14px; }
-    .header h1 { color: white; font-size: 20px; font-weight: 600; }
-    .header p { color: rgba(255,255,255,0.7); font-size: 13px; margin-top: 2px; }
-    .main { max-width: 1100px; margin: 0 auto; padding: 28px; }
-    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
-    .stat { background: white; border-radius: 8px; border: 1px solid #e0ede9; padding: 14px 16px; }
-    .stat-label { font-size: 12px; color: #666; margin-bottom: 4px; }
-    .stat-val { font-size: 22px; font-weight: 600; color: #0F6E56; }
-    .nav { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
-    .nav-btn { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 8px; border: 1.5px solid #0F6E56; background: white; color: #0F6E56; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
-    .nav-btn:hover { background: #E1F5EE; }
-    .nav-btn.active { background: #0F6E56; color: white; }
-    .card { background: white; border-radius: 12px; border: 1px solid #e0ede9; overflow: hidden; }
-    .card-header { padding: 16px 20px; border-bottom: 1px solid #e0ede9; display: flex; align-items: center; justify-content: space-between; }
-    .card-title { font-size: 15px; font-weight: 600; color: #1a1a1a; }
-    .badge { background: #E1F5EE; color: #085041; font-size: 12px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
-    table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    thead tr { background: #f8fdfb; }
-    th { padding: 11px 16px; text-align: left; font-weight: 600; font-size: 12px; color: #0F6E56; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e0ede9; }
-    td { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; color: #333; }
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: #f8fdfb; }
-    .empty, .loading { padding: 48px 20px; text-align: center; color: #888; font-size: 14px; }
-    .error { padding: 14px 20px; background: #FCEBEB; color: #A32D2D; font-size: 13px; border-left: 3px solid #E24B4A; }
-  </style>
+  <title>Sistema Hospital ANDAGON</title>
+  <!-- Font Awesome para iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- CSS Externo -->
+  <link rel="stylesheet" href="/css/estilo.css">
 </head>
 <body>
 
+<!-- ==================== HEADER ==================== -->
 <div class="header">
   <div class="header-inner">
+    <i class="fas fa-hospital-user"></i>
     <div>
-      <h1>🏥 Sistema Hospital ANDAGON</h1>
-      <p>Panel de gestión hospitalaria</p>
+      <h1>Sistema de Gestión Hospitalaria ANDAGON</h1>
+      <p>Panel de administración · HOSPITAL_DB (Azure)</p>
     </div>
   </div>
 </div>
 
+<!-- ==================== CONTENIDO PRINCIPAL ==================== -->
 <div class="main">
+  
+  <!-- Tarjetas de Estadísticas -->
   <div class="stats">
-    <div class="stat"><div class="stat-label">Pacientes</div><div class="stat-val" id="s-pacientes">—</div></div>
-    <div class="stat"><div class="stat-label">Doctores</div><div class="stat-val" id="s-doctores">—</div></div>
-    <div class="stat"><div class="stat-label">Enfermeros</div><div class="stat-val" id="s-Enfermeros">—</div></div>
-    <div class="stat"><div class="stat-label">Medicamentos</div><div class="stat-val" id="s-Medicamentos">—</div></div>
-    <div class="stat"><div class="stat-label">Citas</div><div class="stat-val" id="s-Citas">—</div></div>
+    <div class="stat">
+      <div class="stat-label"><i class="fas fa-user-injured"></i> Pacientes</div>
+      <div class="stat-val" id="s-pacientes">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label"><i class="fas fa-user-md"></i> Doctores</div>
+      <div class="stat-val" id="s-doctores">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label"><i class="fas fa-user-nurse"></i> Enfermeras</div>
+      <div class="stat-val" id="s-Enfermeras">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label"><i class="fas fa-pills"></i> Medicamentos</div>
+      <div class="stat-val" id="s-Medicamentos">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label"><i class="fas fa-calendar-check"></i> Citas</div>
+      <div class="stat-val" id="s-Citas">—</div>
+    </div>
   </div>
 
+  <!-- Navegación por Pestañas -->
   <div class="nav">
-    <button class="nav-btn active" onclick="cargar('pacientes', this)">👤 Pacientes</button>
-    <button class="nav-btn" onclick="cargar('doctores', this)">🩺 Doctores</button>
-    <button class="nav-btn" onclick="cargar('Enfermeros', this)">📋 Enfermeros</button>
-    <button class="nav-btn" onclick="cargar('Medicamentos', this)">🏨 Medicamentos</button>
-    <button class="nav-btn" onclick="cargar('Citas', this)">⚠️ Citas</button>
+    <button class="nav-btn active" onclick="cargar('pacientes', this)"><i class="fas fa-user-injured"></i> Pacientes</button>
+    <button class="nav-btn" onclick="cargar('doctores', this)"><i class="fas fa-user-md"></i> Doctores</button>
+    <button class="nav-btn" onclick="cargar('Enfermeras', this)"><i class="fas fa-user-nurse"></i> Enfermeras</button>
+    <button class="nav-btn" onclick="cargar('Medicamentos', this)"><i class="fas fa-pills"></i> Medicamentos</button>
+    <button class="nav-btn" onclick="cargar('Citas', this)"><i class="fas fa-calendar-check"></i> Citas</button>
   </div>
 
+  <!-- Tarjeta de Tabla de Datos -->
   <div class="card">
     <div class="card-header">
       <div class="card-title" id="card-title">Pacientes</div>
       <span class="badge" id="count-badge">0 registros</span>
     </div>
-    <div id="contenido"><div class="loading">Cargando datos...</div></div>
+    <div id="contenido">
+      <div class="loading"><i class="fas fa-spinner fa-pulse"></i> Cargando datos...</div>
+    </div>
   </div>
 </div>
 
+<!-- ==================== BOTÓN FLOTANTE PARA INSERTAR ==================== -->
+<button class="fab-btn" onclick="abrirModal()">
+  <i class="fas fa-plus"></i>
+</button>
+
+<!-- ==================== MODAL DINÁMICO PARA FORMULARIOS ==================== -->
+<div class="modal" id="modalFormulario">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="modal-titulo"><i class="fas fa-plus-circle"></i> Nuevo Registro</h3>
+    </div>
+    <div class="modal-body" id="modal-body">
+      <!-- El contenido del formulario se generará dinámicamente con JavaScript -->
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primary" id="btnGuardar" onclick="guardarRegistro()">
+        <i class="fas fa-save"></i> Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== JAVASCRIPT ==================== -->
 <script>
+  // Variable global para saber en qué sección estamos
+  let seccionActual = 'pacientes';
+  
+  // Variables para almacenar datos de dropdowns
+  let ciudadesDisponibles = [];
+  let especialidadesDisponibles = [];
+  let especializacionesDisponibles = [];
+  let departamentosDisponibles = [];
+
+  // ==================== FUNCIONES DE ESTADÍSTICAS ====================
   async function cargarStat(sec) {
     try {
-      const r = await fetch('/api/' + sec);
+      const rutaAPI = sec === 'Enfermeras' ? 'Enfermeros' : sec;
+      const r = await fetch('/api/' + rutaAPI);
       const d = await r.json();
       const el = document.getElementById('s-' + sec);
       if (el && Array.isArray(d)) el.textContent = d.length;
-    } catch(e) {}
+    } catch(e) { console.warn('Error cargando estadística:', sec); }
   }
 
+  // ==================== CARGAR DATOS PARA DROPDOWNS ====================
+  async function cargarCiudades() {
+    try { const res = await fetch('/api/ciudades'); ciudadesDisponibles = await res.json(); } catch(e) {}
+  }
+  async function cargarEspecialidades() {
+    try { const res = await fetch('/api/especialidades-lista'); especialidadesDisponibles = await res.json(); } catch(e) {}
+  }
+  async function cargarEspecializaciones() {
+    try { const res = await fetch('/api/especializaciones-lista'); especializacionesDisponibles = await res.json(); } catch(e) {}
+  }
+  async function cargarDepartamentos() {
+    try { const res = await fetch('/api/departamentos'); departamentosDisponibles = await res.json(); } catch(e) {}
+  }
+
+  // ==================== FUNCIÓN PRINCIPAL PARA CARGAR DATOS ====================
   async function cargar(seccion, btn) {
+    seccionActual = seccion;
+    
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
-    document.getElementById('card-title').textContent = seccion.charAt(0).toUpperCase() + seccion.slice(1);
-    document.getElementById('contenido').innerHTML = '<div class="loading">Cargando datos...</div>';
+    
+    const titulos = {
+      'pacientes': 'Pacientes',
+      'doctores': 'Doctores',
+      'Enfermeras': 'Enfermeras',
+      'Medicamentos': 'Medicamentos',
+      'Citas': 'Citas'
+    };
+    document.getElementById('card-title').textContent = titulos[seccion] || seccion;
+    document.getElementById('contenido').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-pulse"></i> Cargando datos...</div>';
 
     try {
-      const res = await fetch('/api/' + seccion);
+      const rutaAPI = seccion === 'Enfermeras' ? 'Enfermeros' : seccion;
+      const res = await fetch('/api/' + rutaAPI);
       const datos = await res.json();
 
       if (datos.error) {
-        document.getElementById('contenido').innerHTML = '<div class="error">Error: ' + datos.error + '</div>';
+        document.getElementById('contenido').innerHTML = `<div class="error"><i class="fas fa-exclamation-triangle"></i> Error: ${datos.error}</div>`;
         document.getElementById('count-badge').textContent = 'Error';
         return;
       }
@@ -100,28 +160,246 @@
       document.getElementById('count-badge').textContent = datos.length + ' registro' + (datos.length !== 1 ? 's' : '');
 
       if (!datos.length) {
-        document.getElementById('contenido').innerHTML = '<div class="empty">No hay registros en esta tabla.</div>';
+        document.getElementById('contenido').innerHTML = '<div class="empty"><i class="fas fa-database"></i> No hay registros en esta tabla.</div>';
         return;
       }
 
       const cols = Object.keys(datos[0]);
       let html = '<div style="overflow-x:auto"><table><thead><tr>';
-      cols.forEach(c => html += '<th>' + c + '</th>');
+      cols.forEach(c => html += `<th>${c}</th>`);
       html += '</tr></thead><tbody>';
       datos.forEach(fila => {
         html += '<tr>';
-        cols.forEach(c => html += '<td>' + (fila[c] ?? '') + '</td>');
+        cols.forEach(c => html += `<td>${fila[c] ?? ''}</td>`);
         html += '</tr>';
       });
       html += '</tbody></table></div>';
       document.getElementById('contenido').innerHTML = html;
     } catch(err) {
-      document.getElementById('contenido').innerHTML = '<div class="error">Error de conexión: ' + err.message + '</div>';
+      document.getElementById('contenido').innerHTML = `<div class="error"><i class="fas fa-exclamation-triangle"></i> Error de conexión: ${err.message}</div>`;
     }
   }
 
-  ['pacientes','doctores','Enfermeros','Medicamentos','Citas'].forEach(cargarStat);
-  cargar('pacientes', document.querySelector('.nav-btn'));
+  // ==================== FUNCIONES DEL MODAL ====================
+  async function abrirModal() {
+    const modal = document.getElementById('modalFormulario');
+    const titulo = document.getElementById('modal-titulo');
+    const body = document.getElementById('modal-body');
+    
+    // Cargar datos necesarios según la sección
+    if (seccionActual === 'pacientes' && ciudadesDisponibles.length === 0) await cargarCiudades();
+    if (seccionActual === 'doctores' && especialidadesDisponibles.length === 0) await cargarEspecialidades();
+    if (seccionActual === 'Enfermeras' && especializacionesDisponibles.length === 0) await cargarEspecializaciones();
+    if (seccionActual === 'Enfermeras' && departamentosDisponibles.length === 0) await cargarDepartamentos();
+    
+    // Configurar título y formulario según la sección actual
+    const configs = {
+      'pacientes': {
+        titulo: 'Nuevo Paciente',
+        campos: [
+          { label: 'Primer Nombre', id: 'nombre', type: 'text', required: true },
+          { label: 'Apellido', id: 'apellido', type: 'text', required: true },
+          { label: 'Fecha de Nacimiento', id: 'fecha_nacimiento', type: 'date', required: true },
+          { label: 'Género', id: 'genero', type: 'select', opciones: ['M', 'F'] },
+          { label: 'Ciudad', id: 'ciudad_id', type: 'ciudades' },
+          { label: 'Teléfono', id: 'telefono', type: 'tel' },
+          { label: 'Correo Electrónico', id: 'correo', type: 'email' }
+        ]
+      },
+      'doctores': {
+        titulo: 'Nuevo Doctor',
+        campos: [
+          { label: 'Primer Nombre', id: 'nombre', type: 'text', required: true },
+          { label: 'Apellido', id: 'apellido', type: 'text', required: true },
+          { label: 'Especialidad', id: 'especialidad', type: 'especialidades', required: true },
+          { label: 'Teléfono', id: 'telefono', type: 'tel' },
+          { label: 'Correo Electrónico', id: 'correo', type: 'email' }
+        ]
+      },
+      'Enfermeras': {
+        titulo: 'Nueva Enfermera',
+        campos: [
+          { label: 'Nombre', id: 'nombre', type: 'text', required: true },
+          { label: 'Apellido', id: 'apellido', type: 'text', required: true },
+          { label: 'Especialización', id: 'especializacion', type: 'especializaciones' },
+          { label: 'Departamento', id: 'departamento_id', type: 'departamentos' },
+          { label: 'Horas de Turno', id: 'horas_turno', type: 'text' }
+        ]
+      },
+      'Medicamentos': {
+        titulo: 'Nuevo Medicamento',
+        campos: [
+          { label: 'Nombre', id: 'nombre', type: 'text', required: true },
+          { label: 'Marca', id: 'marca', type: 'text' },
+          { label: 'Tipo', id: 'tipo', type: 'text' },
+          { label: 'Dosis', id: 'dosis', type: 'text' },
+          { label: 'Cantidad en Stock', id: 'stock', type: 'number', required: true }
+        ]
+      },
+      'Citas': {
+        titulo: 'Nueva Cita',
+        campos: [
+          { label: 'ID Paciente', id: 'paciente_id', type: 'number', required: true },
+          { label: 'ID Doctor', id: 'doctor_id', type: 'number' },
+          { label: 'Fecha', id: 'fecha_cita', type: 'date', required: true },
+          { label: 'Hora', id: 'hora_cita', type: 'time', required: true },
+          { label: 'ID Estado', id: 'estado_id', type: 'number' },
+          { label: 'Propósito', id: 'proposito', type: 'text' }
+        ]
+      }
+    };
+
+    const config = configs[seccionActual];
+    
+    if (!config) {
+      alert('Formulario no disponible para esta sección aún.');
+      return;
+    }
+
+    titulo.innerHTML = `<i class="fas fa-plus-circle"></i> ${config.titulo}`;
+    
+    let html = '<form id="formDinamico">';
+    config.campos.forEach(campo => {
+      html += `<div class="form-group">`;
+      html += `<label>${campo.label} ${campo.required ? '<span style="color:red">*</span>' : ''}</label>`;
+      
+      if (campo.type === 'ciudades') {
+        html += `<select id="${campo.id}" ${campo.required ? 'required' : ''}><option value="">Seleccione una ciudad...</option>`;
+        ciudadesDisponibles.forEach(item => html += `<option value="${item.id}">${item.nombre}</option>`);
+        html += `</select>`;
+      } else if (campo.type === 'especialidades') {
+        html += `<select id="${campo.id}" ${campo.required ? 'required' : ''}><option value="">Seleccione una especialidad...</option>`;
+        especialidadesDisponibles.forEach(item => html += `<option value="${item.nombre}">${item.nombre}</option>`);
+        html += `<option value="__OTRA__">➕ Otra (escribir)</option></select>`;
+        html += `<input type="text" id="${campo.id}_manual" placeholder="Especifique otra especialidad" style="display:none; margin-top:10px;">`;
+      } else if (campo.type === 'especializaciones') {
+        html += `<select id="${campo.id}" ${campo.required ? 'required' : ''}><option value="">Seleccione una especialización...</option>`;
+        especializacionesDisponibles.forEach(item => html += `<option value="${item.nombre}">${item.nombre}</option>`);
+        html += `<option value="__OTRA__">➕ Otra (escribir)</option></select>`;
+        html += `<input type="text" id="${campo.id}_manual" placeholder="Especifique otra especialización" style="display:none; margin-top:10px;">`;
+      } else if (campo.type === 'departamentos') {
+        html += `<select id="${campo.id}" ${campo.required ? 'required' : ''}><option value="">Seleccione un departamento...</option>`;
+        departamentosDisponibles.forEach(item => html += `<option value="${item.id}">${item.nombre}</option>`);
+        html += `</select>`;
+      } else if (campo.type === 'select') {
+        html += `<select id="${campo.id}" ${campo.required ? 'required' : ''}><option value="">Seleccione...</option>`;
+        campo.opciones.forEach(op => html += `<option value="${op}">${op}</option>`);
+        html += `</select>`;
+      } else {
+        html += `<input type="${campo.type}" id="${campo.id}" ${campo.required ? 'required' : ''} placeholder="Ingrese ${campo.label.toLowerCase()}">`;
+      }
+      html += `</div>`;
+    });
+    html += '</form>';
+    body.innerHTML = html;
+    
+    // Evento para mostrar/ocultar campo manual en especialidades
+    const selectEspecialidad = document.getElementById('especialidad');
+    if (selectEspecialidad) {
+      selectEspecialidad.addEventListener('change', function() {
+        const manualInput = document.getElementById('especialidad_manual');
+        if (this.value === '__OTRA__') {
+          manualInput.style.display = 'block';
+          manualInput.required = true;
+        } else {
+          manualInput.style.display = 'none';
+          manualInput.required = false;
+        }
+      });
+    }
+    
+    // Evento para mostrar/ocultar campo manual en especializaciones
+    const selectEspecializacion = document.getElementById('especializacion');
+    if (selectEspecializacion) {
+      selectEspecializacion.addEventListener('change', function() {
+        const manualInput = document.getElementById('especializacion_manual');
+        if (this.value === '__OTRA__') {
+          manualInput.style.display = 'block';
+          manualInput.required = true;
+        } else {
+          manualInput.style.display = 'none';
+          manualInput.required = false;
+        }
+      });
+    }
+    
+    modal.classList.add('active');
+  }
+
+  function cerrarModal() {
+    document.getElementById('modalFormulario').classList.remove('active');
+  }
+
+  // ==================== GUARDAR REGISTRO (INSERT) ====================
+  async function guardarRegistro() {
+    const form = document.getElementById('formDinamico');
+    const campos = form.querySelectorAll('input, select');
+    
+    // Validar campos requeridos
+    for (let campo of campos) {
+      if (campo.required && !campo.value.trim()) {
+        alert('Por favor complete todos los campos obligatorios.');
+        return;
+      }
+    }
+
+    // Construir objeto de datos
+    const data = {};
+    campos.forEach(campo => {
+      if (campo.value.trim() !== '') {
+        if (campo.id === 'especialidad' && campo.value === '__OTRA__') {
+          const manual = document.getElementById('especialidad_manual');
+          data[campo.id] = manual.value;
+        } else if (campo.id === 'especializacion' && campo.value === '__OTRA__') {
+          const manual = document.getElementById('especializacion_manual');
+          data[campo.id] = manual.value;
+        } else {
+          data[campo.id] = campo.value;
+        }
+      }
+    });
+
+    try {
+      const rutaAPI = seccionActual === 'Enfermeras' ? 'Enfermeras' : seccionActual;
+      const response = await fetch('/api/' + rutaAPI, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('✅ Registro agregado exitosamente');
+        cerrarModal();
+        cargar(seccionActual, document.querySelector('.nav-btn.active'));
+        cargarStat(seccionActual);
+      } else {
+        alert('❌ Error: ' + (result.error || 'No se pudo agregar'));
+      }
+    } catch (err) {
+      alert('❌ Error de conexión: ' + err.message);
+    }
+  }
+
+  // Cerrar modal si se hace clic fuera
+  document.getElementById('modalFormulario').addEventListener('click', function(e) {
+    if (e.target === this) cerrarModal();
+  });
+
+  // ==================== INICIALIZAR ====================
+  async function inicializar() {
+    await Promise.all([
+      cargarCiudades(),
+      cargarEspecialidades(),
+      cargarEspecializaciones(),
+      cargarDepartamentos()
+    ]);
+    ['pacientes', 'doctores', 'Enfermeras', 'Medicamentos', 'Citas'].forEach(cargarStat);
+    cargar('pacientes', document.querySelector('.nav-btn'));
+  }
+  
+  inicializar();
 </script>
 </body>
 </html>
