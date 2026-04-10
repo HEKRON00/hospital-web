@@ -20,13 +20,11 @@
 - [✨ Características](#-características)
 - [🛠️ Tecnologías](#️-tecnologías)
 - [📁 Estructura del Proyecto](#-estructura-del-proyecto)
-- [🚀 Despliegue](#-despliegue)
+- [🚀 Despliegue en Vercel](#-despliegue-en-vercel)
 - [🔐 Autenticación](#-autenticación)
 - [📊 Módulos](#-módulos)
 - [📎 Exportación](#-exportación)
 - [🌙 Modo Oscuro](#-modo-oscuro)
-- [⚙️ Instalación Local](#️-instalación-local)
-- [📸 Capturas de Pantalla](#-capturas-de-pantalla)
 - [👥 Autores](#-autores)
 - [📄 Licencia](#-licencia)
 
@@ -38,7 +36,7 @@ El **Sistema Hospitalario ANDAGON** es una aplicación web completa para la gest
 
 Desarrollado como proyecto universitario para la **Universidad Tecnológica de Honduras (UTH)**, el sistema implementa una arquitectura de tres capas con **Node.js + Express** como backend, **Azure SQL Database** como base de datos y un frontend responsive con **HTML5, CSS3 y JavaScript** puro.
 
-> 🌐 **Demo en vivo:** [https://hospital-web.vercel.app](https://hospital-web.vercel.app)
+> 🌐 **Aplicación en producción:** [https://hospital-web.vercel.app](https://hospital-web.vercel.app)
 
 ---
 
@@ -86,23 +84,23 @@ Desarrollado como proyecto universitario para la **Universidad Tecnológica de H
 
 ## 📁 Estructura del Proyecto
 BD_HOSPITAL/
-├── 📄 server.js # Backend principal (Node.js + Express)
-├── 📄 package.json # Dependencias y scripts
-├── 📄 vercel.json # Configuración para despliegue en Vercel
-├── 📄 .gitignore # Archivos ignorados por Git
-├── 📁 public/
-│ ├── 📄 login.html # Página de autenticación
-│ ├── 📄 index.html # Panel principal del sistema
-│ └── 📁 css/
-│ ├── 🎨 estilo.css # Tema claro
-│ ├── 🎨 estilo-oscuro.css # Tema oscuro
-│ └── 🎨 login.css # Estilos del login
+├── server.js # Backend principal (Node.js + Express)
+├── package.json # Dependencias y scripts
+├── vercel.json # Configuración para despliegue en Vercel
+├── .gitignore # Archivos ignorados por Git
+└── public/
+├── login.html # Página de autenticación
+├── index.html # Panel principal del sistema
+└── css/
+├── estilo.css # Tema claro
+├── estilo-oscuro.css # Tema oscuro
+└── login.css # Estilos del login
 
 text
 
 ---
 
-## 🚀 Despliegue
+## 🚀 Despliegue en Vercel
 
 El sistema está desplegado en **Vercel** con integración continua desde **GitHub**.
 
@@ -119,6 +117,8 @@ El sistema está desplegado en **Vercel** con integración continua desde **GitH
 | `DB_NAME` | `HOSPITAL_DB` |
 | `DB_USER` | `admin_uth` |
 | `DB_PASSWORD` | `Hospital123!` |
+
+> ⚠️ **Nota:** Estas credenciales son para el entorno de producción. No se comparten en el código fuente.
 
 ---
 
@@ -182,45 +182,45 @@ La preferencia se guarda en `localStorage`.
 
 ---
 
-## ⚙️ Instalación Local
+## 👥 Autores
 
-Si deseas ejecutar el proyecto en tu máquina local:
+<table>
+  <tr>
+    <td align="center">
+      <strong>Anny Junith Orellana Maldonado</strong><br>
+      <sub>202210040267</sub>
+    </td>
+    <td align="center">
+      <strong>Yensi Dayana Miguel Ramos</strong><br>
+      <sub>202010020072</sub>
+    </td>
+    <td align="center">
+      <strong>Fredy Hernan Gonzales Gomez</strong><br>
+      <sub>202310110052</sub>
+    </td>
+  </tr>
+</table>
 
-```bash
-# 1. Clonar el repositorio
-git clone https://github.com/HEKRON00/hospital-web.git
-cd hospital-web
+### 👨‍🏫 Catedrático
+**Kevin Alexander Maradiaga Sarmiento**
 
-# 2. Instalar dependencias
-npm install
-
-# 3. Configurar variables de entorno (o editar server.js)
-# DB_SERVER, DB_NAME, DB_USER, DB_PASSWORD
-
-# 4. Ejecutar el servidor
-npm start
-
-# 5. Acceder en el navegador
-# http://localhost:3000
-📸 Capturas de Pantalla
-Login	Panel Principal
-https://via.placeholder.com/400x250/0F6E56/white?text=Login+ANDAGON	https://via.placeholder.com/400x250/0F6E56/white?text=Panel+Principal
-Pacientes	Doctores
-https://via.placeholder.com/400x250/0F6E56/white?text=Pacientes	https://via.placeholder.com/400x250/0F6E56/white?text=Doctores
-Modo Oscuro	Exportar Excel
-https://via.placeholder.com/400x250/1e293b/white?text=Modo+Oscuro	https://via.placeholder.com/400x250/0F6E56/white?text=Exportar+Excel
-👥 Autores
-<table> <tr> <td align="center"> <strong>Anny Junith Orellana Maldonado</strong><br> <sub>202210040267</sub> </td> <td align="center"> <strong>Yensi Dayana Miguel Ramos</strong><br> <sub>202010020072</sub> </td> <td align="center"> <strong>Fredy Hernan Gonzales Gomez</strong><br> <sub>202310110052</sub> </td> </tr> </table>
-👨‍🏫 Catedrático
-Kevin Alexander Maradiaga Sarmiento
-
-🏛️ Universidad
-Universidad Tecnológica de Honduras (UTH)
+### 🏛️ Universidad
+**Universidad Tecnológica de Honduras (UTH)**  
 Facultad de Ingeniería · Ingeniería en Computación / Informática
 
-📄 Licencia
+---
+
+## 📄 Licencia
+
 Este proyecto fue desarrollado con fines académicos para la Universidad Tecnológica de Honduras.
 
-ISC License - Ver archivo LICENSE para más detalles.
+**ISC License** - Ver archivo [LICENSE](LICENSE) para más detalles.
 
-<div align="center"> <img src="https://img.shields.io/badge/UTH-Liderazgo%20con%20Visi%C3%B3n%20Tecnol%C3%B3gica-0F6E56?style=for-the-badge" alt="UTH"> <br><br> <p>© 2026 - Sistema Hospitalario ANDAGON v2.0 - Proyecto Universitario</p> <p>🏥 Desarrollado con ❤️ por el equipo ANDAGON</p> </div> ```
+---
+
+<div align="center">
+  <img src="https://img.shields.io/badge/UTH-Liderazgo%20con%20Visi%C3%B3n%20Tecnol%C3%B3gica-0F6E56?style=for-the-badge" alt="UTH">
+  <br><br>
+  <p>© 2026 - Sistema Hospitalario ANDAGON v2.0 - Proyecto Universitario</p>
+  <p>🏥 Desarrollado con ❤️ por el equipo ANDAGON</p>
+</div>
