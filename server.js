@@ -244,6 +244,112 @@ app.post('/api/Citas', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// ==========================================================
+// RUTAS DELETE (Eliminar registros)
+// ==========================================================
+
+// Eliminar Paciente
+app.delete('/api/pacientes/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const pool = await sql.connect(config);
+    await pool.request()
+      .input('id', sql.Int, id)
+      .query('DELETE FROM dbo.Pacientes WHERE paciente_id = @id');
+    res.json({ success: true, message: 'Paciente eliminado correctamente' });
+  } catch (err) {
+    console.error('Error en DELETE /api/pacientes:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Eliminar Doctor
+app.delete('/api/doctores/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const pool = await sql.connect(config);
+    await pool.request()
+      .input('id', sql.Int, id)
+      .query('DELETE FROM dbo.Doctores WHERE doctor_id = @id');
+    res.json({ success: true, message: 'Doctor eliminado correctamente' });
+  } catch (err) {
+    console.error('Error en DELETE /api/doctores:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Eliminar Enfermera (elimina de Enfermeros y Personal)
+app.delete('/api/Enfermeras/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const pool = await sql.connect(config);
+    
+    // Primero obtener el personal_id
+    const result = await pool.request()
+      .input('enfermero_id', sql.Int, id)
+      .query('SELECT personal_id FROM dbo.Enfermeros WHERE enfermero_id = @enfermero_id');
+    
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ error: 'Enfermera no encontrada' });
+    }
+    
+    const personal_id = result.recordset[0].personal_id;
+    
+    const transaction = new sql.Transaction(pool);
+    await transaction.begin();
+    
+    try {
+      // Eliminar de Enfermeros
+      await transaction.request()
+        .input('enfermero_id', sql.Int, id)
+        .query('DELETE FROM dbo.Enfermeros WHERE enfermero_id = @enfermero_id');
+      
+      // Eliminar de Personal
+      await transaction.request()
+        .input('personal_id', sql.Int, personal_id)
+        .query('DELETE FROM dbo.Personal WHERE personal_id = @personal_id');
+      
+      await transaction.commit();
+      res.json({ success: true, message: 'Enfermera eliminada correctamente' });
+    } catch (err) {
+      await transaction.rollback();
+      throw err;
+    }
+  } catch (err) {
+    console.error('Error en DELETE /api/Enfermeras:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Eliminar Medicamento
+app.delete('/api/Medicamentos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const pool = await sql.connect(config);
+    await pool.request()
+      .input('id', sql.Int, id)
+      .query('DELETE FROM dbo.Medicamentos WHERE medicamento_id = @id');
+    res.json({ success: true, message: 'Medicamento eliminado correctamente' });
+  } catch (err) {
+    console.error('Error en DELETE /api/Medicamentos:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Eliminar Cita
+app.delete('/api/Citas/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const pool = await sql.connect(config);
+    await pool.request()
+      .input('id', sql.Int, id)
+      .query('DELETE FROM dbo.Citas WHERE cita_id = @id');
+    res.json({ success: true, message: 'Cita eliminada correctamente' });
+  } catch (err) {
+    console.error('Error en DELETE /api/Citas:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // ==========================================================
 // INICIAR SERVIDOR

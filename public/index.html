@@ -81,9 +81,7 @@
     <div class="modal-header">
       <h3 id="modal-titulo"><i class="fas fa-plus-circle"></i> Nuevo Registro</h3>
     </div>
-    <div class="modal-body" id="modal-body">
-      <!-- El contenido del formulario se generará dinámicamente con JavaScript -->
-    </div>
+    <div class="modal-body" id="modal-body"></div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
       <button class="btn btn-primary" id="btnGuardar" onclick="guardarRegistro()">
@@ -102,7 +100,6 @@
   let departamentosDisponibles = [];
   let pacientesDisponibles = [];
   let doctoresDisponibles = [];
-  let estadosDisponibles = [];
 
   // ==================== CARGAR ESTADÍSTICAS ====================
   async function cargarStat(sec) {
@@ -143,6 +140,29 @@
     } catch(e) {}
   }
 
+  // ==================== ELIMINAR REGISTRO ====================
+  async function eliminarRegistro(seccion, id) {
+    if (!confirm('¿Estás seguro de eliminar este registro? Esta acción no se puede deshacer.')) {
+      return;
+    }
+    
+    try {
+      const rutaAPI = seccion === 'Enfermeras' ? 'Enfermeras' : seccion;
+      const response = await fetch(`/api/${rutaAPI}/${id}`, { method: 'DELETE' });
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('✅ Registro eliminado correctamente');
+        cargar(seccionActual, document.querySelector('.nav-btn.active'));
+        cargarStat(seccionActual);
+      } else {
+        alert('❌ Error: ' + (result.error || 'No se pudo eliminar'));
+      }
+    } catch (err) {
+      alert('❌ Error de conexión: ' + err.message);
+    }
+  }
+
   // ==================== CARGAR TABLA PRINCIPAL ====================
   async function cargar(seccion, btn) {
     seccionActual = seccion;
@@ -173,10 +193,18 @@
       const cols = Object.keys(datos[0]);
       let html = '<div style="overflow-x:auto"><table><thead><tr>';
       cols.forEach(c => html += `<th>${c}</th>`);
+      html += '<th>Acciones</th>';
       html += '</tr></thead><tbody>';
+      
       datos.forEach(fila => {
         html += '<tr>';
         cols.forEach(c => html += `<td>${fila[c] ?? ''}</td>`);
+        const id = fila['ID'] || fila['id'] || fila[cols[0]];
+        html += `<td class="acciones">
+          <button class="btn-delete" onclick="eliminarRegistro('${seccion}', ${id})">
+            <i class="fas fa-trash"></i> Eliminar
+          </button>
+        </td>`;
         html += '</tr>';
       });
       html += '</tbody></table></div>';
@@ -188,7 +216,6 @@
 
   // ==================== ABRIR MODAL CON FORMULARIO ====================
   async function abrirModal() {
-    // Cargar datos necesarios
     if (seccionActual === 'pacientes' && ciudadesDisponibles.length === 0) await cargarCiudades();
     if (seccionActual === 'doctores' && especialidadesDisponibles.length === 0) await cargarEspecialidades();
     if (seccionActual === 'Enfermeras' && especializacionesDisponibles.length === 0) await cargarEspecializaciones();
@@ -299,7 +326,6 @@
     html += '</form>';
     document.getElementById('modal-body').innerHTML = html;
     
-    // Eventos para "Otra" opción
     const selectEsp = document.getElementById('especialidad');
     if (selectEsp) selectEsp.addEventListener('change', function() {
       document.getElementById('especialidad_manual').style.display = this.value === '__OTRA__' ? 'block' : 'none';
@@ -329,7 +355,6 @@
       }
     });
 
-    // Para citas, estado por defecto = 1 (Pendiente)
     if (seccionActual === 'Citas') data.estado_id = 1;
 
     try {
