@@ -81,7 +81,6 @@ Desarrollado como proyecto universitario para la **Universidad Tecnológica de H
 ![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)
 
 ---
-
 ## 📁 Estructura del Proyecto
 BD_HOSPITAL/
 ├── server.js # Backend principal (Node.js + Express)
@@ -95,9 +94,6 @@ BD_HOSPITAL/
 ├── estilo.css # Tema claro
 ├── estilo-oscuro.css # Tema oscuro
 └── login.css # Estilos del login
-
-text
-
 ---
 
 ## 🚀 Despliegue en Vercel
