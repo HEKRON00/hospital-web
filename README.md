@@ -223,3 +223,4 @@ Este proyecto fue desarrollado con fines académicos para la Universidad Tecnol�
   <p>© 2026 - Sistema Hospitalario ANDAGON v2.0 - Proyecto Universitario</p>
   <p>🏥 Desarrollado con ❤️ por el equipo ANDAGON</p>
 </div>
+
