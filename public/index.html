@@ -74,13 +74,27 @@
 
 <script>
   // ==================== VERIFICAR SESIÓN ====================
-  const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
-  const token = localStorage.getItem('token');
+const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
+const token = localStorage.getItem('token');
 
-  if (!usuario || !token) {
-    window.location.href = '/login';
+// Verificar si el token ha expirado
+function tokenExpirado(token) {
+  if (!token) return true;
+  try {
+    const decoded = JSON.parse(atob(token));
+    return decoded.exp < Date.now();
+  } catch (e) {
+    return true;
   }
+}
 
+if (!usuario || !token || tokenExpirado(token)) {
+  // Limpiar storage por si acaso
+  localStorage.removeItem('usuario');
+  localStorage.removeItem('token');
+  // Redirigir al login
+  window.location.href = '/login';
+}
   // Verificar si es administrador
   const esAdmin = usuario && usuario.rol === 'Administrador';
   const esInvitado = usuario && usuario.rol === 'Invitado';
