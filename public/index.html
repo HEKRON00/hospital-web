@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistema Hospital ANDAGON</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="/css/estilo.css">
+  <link rel="stylesheet" href="/css/estilo.css" id="theme-style">
 </head>
 <body>
 
@@ -16,6 +16,9 @@
       <h1>Sistema de Gestión Hospitalaria ANDAGON</h1>
       <p>Panel de administración · HOSPITAL_DB (Azure)</p>
     </div>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
+      <i class="fas fa-moon"></i> Modo Oscuro
+    </button>
   </div>
 </div>
 
@@ -27,6 +30,7 @@
     <div class="stat"><div class="stat-label"><i class="fas fa-user-nurse"></i> Enfermeras</div><div class="stat-val" id="s-Enfermeras">—</div></div>
     <div class="stat"><div class="stat-label"><i class="fas fa-pills"></i> Medicamentos</div><div class="stat-val" id="s-Medicamentos">—</div></div>
     <div class="stat"><div class="stat-label"><i class="fas fa-calendar-check"></i> Citas</div><div class="stat-val" id="s-Citas">—</div></div>
+    <div class="stat"><div class="stat-label"><i class="fas fa-bed"></i> Habitaciones</div><div class="stat-val" id="s-habitaciones">—</div></div>
   </div>
 
   <div class="nav">
@@ -35,12 +39,18 @@
     <button class="nav-btn" onclick="cargar('Enfermeras', this)"><i class="fas fa-user-nurse"></i> Enfermeras</button>
     <button class="nav-btn" onclick="cargar('Medicamentos', this)"><i class="fas fa-pills"></i> Medicamentos</button>
     <button class="nav-btn" onclick="cargar('Citas', this)"><i class="fas fa-calendar-check"></i> Citas</button>
+    <button class="nav-btn" onclick="cargar('habitaciones', this)"><i class="fas fa-bed"></i> Habitaciones</button>
   </div>
 
   <div class="card">
     <div class="card-header">
       <div class="card-title" id="card-title">Pacientes</div>
-      <span class="badge" id="count-badge">0 registros</span>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <span class="badge" id="count-badge">0 registros</span>
+        <button class="btn-export" onclick="exportarDatos()" title="Exportar a Excel">
+          <i class="fas fa-download"></i> Exportar
+        </button>
+      </div>
     </div>
     <div id="contenido"><div class="loading"><i class="fas fa-spinner fa-pulse"></i> Cargando datos...</div></div>
   </div>
@@ -67,7 +77,34 @@
   let departamentosDisponibles = [];
   let pacientesDisponibles = [];
   let doctoresDisponibles = [];
+  let tiposHabitacionDisponibles = [];
   let registroEditando = null;
+  let temaOscuro = false;
+
+  // ==================== MODO OSCURO ====================
+  function toggleTheme() {
+    temaOscuro = !temaOscuro;
+    const themeLink = document.getElementById('theme-style');
+    const toggleBtn = document.getElementById('themeToggle');
+    
+    if (temaOscuro) {
+      themeLink.href = '/css/estilo-oscuro.css';
+      toggleBtn.innerHTML = '<i class="fas fa-sun"></i> Modo Claro';
+      localStorage.setItem('theme', 'dark');
+    } else {
+      themeLink.href = '/css/estilo.css';
+      toggleBtn.innerHTML = '<i class="fas fa-moon"></i> Modo Oscuro';
+      localStorage.setItem('theme', 'light');
+    }
+  }
+
+  // Cargar tema guardado
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme === 'dark') {
+    temaOscuro = true;
+    document.getElementById('theme-style').href = '/css/estilo-oscuro.css';
+    document.getElementById('themeToggle').innerHTML = '<i class="fas fa-sun"></i> Modo Claro';
+  }
 
   // ==================== CARGAR ESTADÍSTICAS ====================
   async function cargarStat(sec) {
@@ -78,6 +115,16 @@
       const el = document.getElementById('s-' + sec);
       if (el && Array.isArray(d)) el.textContent = d.length;
     } catch(e) { console.warn('Error:', sec); }
+  }
+
+  // ==================== EXPORTAR DATOS ====================
+  async function exportarDatos() {
+    try {
+      const modulo = seccionActual === 'Enfermeras' ? 'enfermeras' : seccionActual;
+      window.open(`/api/exportar/${modulo}`, '_blank');
+    } catch(e) {
+      alert('Error al exportar: ' + e.message);
+    }
   }
 
   // ==================== CARGAR DATOS PARA DROPDOWNS ====================
@@ -106,6 +153,9 @@
       const data = await res.json();
       doctoresDisponibles = data.map(d => ({ id: d.ID, nombre: d.Nombre + ' ' + d.Apellido + ' (' + d.Especialidad + ')' }));
     } catch(e) {}
+  }
+  async function cargarTiposHabitacion() {
+    try { const res = await fetch('/api/tipos-habitacion'); tiposHabitacionDisponibles = await res.json(); } catch(e) {}
   }
 
   // ==================== ELIMINAR REGISTRO ====================
@@ -221,7 +271,10 @@
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
     
-    const titulos = { 'pacientes': 'Pacientes', 'doctores': 'Doctores', 'Enfermeras': 'Enfermeras', 'Medicamentos': 'Medicamentos', 'Citas': 'Citas' };
+    const titulos = { 
+      'pacientes': 'Pacientes', 'doctores': 'Doctores', 'Enfermeras': 'Enfermeras', 
+      'Medicamentos': 'Medicamentos', 'Citas': 'Citas', 'habitaciones': 'Habitaciones' 
+    };
     document.getElementById('card-title').textContent = titulos[seccion] || seccion;
     document.getElementById('contenido').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-pulse"></i> Cargando datos...</div>';
 
@@ -272,6 +325,7 @@
     if (seccionActual === 'Enfermeras' && departamentosDisponibles.length === 0) await cargarDepartamentos();
     if (seccionActual === 'Citas' && pacientesDisponibles.length === 0) await cargarPacientes();
     if (seccionActual === 'Citas' && doctoresDisponibles.length === 0) await cargarDoctores();
+    if (seccionActual === 'habitaciones' && tiposHabitacionDisponibles.length === 0) await cargarTiposHabitacion();
     
     const configs = {
       'pacientes': {
@@ -282,8 +336,8 @@
           { label: 'Fecha de Nacimiento', id: 'fecha_nacimiento', type: 'date', required: true },
           { label: 'Género', id: 'genero', type: 'select', opciones: ['M', 'F'] },
           { label: 'Ciudad', id: 'ciudad_id', type: 'ciudades' },
-          { label: 'Teléfono', id: 'telefono', type: 'tel' },
-          { label: 'Correo', id: 'correo', type: 'email' }
+          { label: 'Teléfono', id: 'telefono', type: 'tel', placeholder: 'Ej: 9999-9999' },
+          { label: 'Correo', id: 'correo', type: 'email', placeholder: 'ejemplo@correo.com' }
         ]
       },
       'doctores': {
@@ -314,7 +368,7 @@
           { label: 'Marca', id: 'marca', type: 'text' },
           { label: 'Tipo', id: 'tipo', type: 'text' },
           { label: 'Dosis', id: 'dosis', type: 'text' },
-          { label: 'Stock', id: 'stock', type: 'number', required: true }
+          { label: 'Stock', id: 'stock', type: 'number', required: true, min: 0 }
         ]
       },
       'Citas': {
@@ -325,6 +379,15 @@
           { label: 'Fecha', id: 'fecha_cita', type: 'date', required: true },
           { label: 'Hora', id: 'hora_cita', type: 'time', required: true },
           { label: 'Propósito', id: 'proposito', type: 'text' }
+        ]
+      },
+      'habitaciones': {
+        titulo: 'Nueva Habitación',
+        campos: [
+          { label: 'Número', id: 'numero', type: 'text', required: true },
+          { label: 'Tipo', id: 'tipo_id', type: 'tipos-habitacion' },
+          { label: 'Capacidad', id: 'capacidad', type: 'number', min: 1 },
+          { label: 'Estado', id: 'estado', type: 'select', opciones: ['Disponible', 'Ocupada', 'Mantenimiento', 'Limpieza'] }
         ]
       }
     };
@@ -366,12 +429,16 @@
         html += `<select id="${campo.id}" ${campo.required ? 'required' : ''}><option value="">Seleccione un doctor...</option>`;
         doctoresDisponibles.forEach(d => html += `<option value="${d.id}">${d.nombre}</option>`);
         html += `</select>`;
+      } else if (campo.type === 'tipos-habitacion') {
+        html += `<select id="${campo.id}" ${campo.required ? 'required' : ''}><option value="">Seleccione un tipo...</option>`;
+        tiposHabitacionDisponibles.forEach(t => html += `<option value="${t.id}">${t.nombre}</option>`);
+        html += `</select>`;
       } else if (campo.type === 'select') {
         html += `<select id="${campo.id}" ${campo.required ? 'required' : ''}><option value="">Seleccione...</option>`;
         campo.opciones.forEach(o => html += `<option value="${o}">${o}</option>`);
         html += `</select>`;
       } else {
-        html += `<input type="${campo.type}" id="${campo.id}" ${campo.required ? 'required' : ''} placeholder="Ingrese ${campo.label.toLowerCase()}">`;
+        html += `<input type="${campo.type}" id="${campo.id}" ${campo.required ? 'required' : ''} ${campo.min ? `min="${campo.min}"` : ''} placeholder="${campo.placeholder || 'Ingrese ' + campo.label.toLowerCase()}">`;
       }
       html += `</div>`;
     });
@@ -420,17 +487,28 @@
       const rutaAPI = seccionActual === 'Enfermeras' ? 'Enfermeras' : seccionActual;
       const res = await fetch('/api/' + rutaAPI, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
       const result = await res.json();
-      if (result.success) { alert('✅ Agregado'); cerrarModal(); cargar(seccionActual, document.querySelector('.nav-btn.active')); cargarStat(seccionActual); }
-      else alert('❌ Error: ' + result.error);
-    } catch(e) { alert('❌ Error: ' + e.message); }
+      if (result.success) { 
+        alert('✅ Agregado correctamente'); 
+        cerrarModal(); 
+        cargar(seccionActual, document.querySelector('.nav-btn.active')); 
+        cargarStat(seccionActual); 
+      } else { 
+        alert('❌ ' + (result.error || 'Error al guardar')); 
+      }
+    } catch(e) { 
+      alert('❌ Error de conexión: ' + e.message); 
+    }
   }
 
   document.getElementById('modalFormulario').addEventListener('click', function(e) { if (e.target === this) cerrarModal(); });
 
   // ==================== INICIALIZAR ====================
   async function inicializar() {
-    await Promise.all([cargarCiudades(), cargarEspecialidades(), cargarEspecializaciones(), cargarDepartamentos(), cargarPacientes(), cargarDoctores()]);
-    ['pacientes', 'doctores', 'Enfermeras', 'Medicamentos', 'Citas'].forEach(cargarStat);
+    await Promise.all([
+      cargarCiudades(), cargarEspecialidades(), cargarEspecializaciones(), 
+      cargarDepartamentos(), cargarPacientes(), cargarDoctores(), cargarTiposHabitacion()
+    ]);
+    ['pacientes', 'doctores', 'Enfermeras', 'Medicamentos', 'Citas', 'habitaciones'].forEach(cargarStat);
     cargar('pacientes', document.querySelector('.nav-btn'));
   }
   inicializar();

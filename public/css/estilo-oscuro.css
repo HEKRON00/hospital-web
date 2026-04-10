@@ -1,0 +1,105 @@
+/* ==================== TEMA OSCURO ==================== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Roboto, sans-serif; background: #0f172a; min-height: 100vh; color: #e2e8f0; }
+
+/* ==================== HEADER ==================== */
+.header { background: linear-gradient(135deg, #064e3b 0%, #022c22 100%); padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+.header-inner { max-width: 1300px; margin: 0 auto; padding: 20px 28px; display: flex; align-items: center; gap: 15px; }
+.header-inner i { color: #6ee7b7; font-size: 32px; }
+.header h1 { color: white; font-size: 24px; font-weight: 500; }
+.header p { color: rgba(255,255,255,0.6); font-size: 14px; margin-top: 4px; }
+
+/* ==================== THEME TOGGLE ==================== */
+.theme-toggle { margin-left: auto; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 10px 18px; border-radius: 30px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
+.theme-toggle:hover { background: rgba(255,255,255,0.15); }
+
+/* ==================== CONTENEDOR PRINCIPAL ==================== */
+.main { max-width: 1300px; margin: 0 auto; padding: 30px; }
+
+/* ==================== TARJETAS DE ESTADÍSTICAS ==================== */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 18px; margin-bottom: 30px; }
+.stat { background: #1e293b; border-radius: 16px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); border: 1px solid #334155; transition: transform 0.2s; }
+.stat:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+.stat-label { font-size: 13px; color: #94a3b8; margin-bottom: 8px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+.stat-label i { color: #34d399; width: 18px; }
+.stat-val { font-size: 34px; font-weight: 700; color: #34d399; }
+
+/* ==================== NAVEGACIÓN ==================== */
+.nav { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 25px; }
+.nav-btn { display: flex; align-items: center; gap: 10px; padding: 12px 22px; border-radius: 40px; border: none; background: #1e293b; color: #e2e8f0; font-size: 15px; font-weight: 500; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.2); border: 1px solid #334155; transition: all 0.2s; }
+.nav-btn i { color: #34d399; width: 18px; }
+.nav-btn:hover { background: #2d3a52; border-color: #34d399; }
+.nav-btn.active { background: #059669; color: white; border-color: #059669; }
+.nav-btn.active i { color: white; }
+
+/* ==================== BOTÓN FLOTANTE ==================== */
+.fab-btn { position: fixed; bottom: 30px; right: 30px; background: #059669; color: white; border: none; width: 60px; height: 60px; border-radius: 30px; box-shadow: 0 8px 20px rgba(5,150,105,0.3); cursor: pointer; font-size: 24px; display: flex; align-items: center; justify-content: center; transition: 0.2s; z-index: 100; }
+.fab-btn:hover { background: #047857; transform: scale(1.05); }
+
+/* ==================== MODAL ==================== */
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; z-index: 1000; }
+.modal.active { display: flex; }
+.modal-content { background: #1e293b; width: 90%; max-width: 500px; border-radius: 28px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); overflow: hidden; animation: modalEntrada 0.2s ease-out; }
+@keyframes modalEntrada { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+.modal-header { padding: 24px 28px 12px; border-bottom: 1px solid #334155; }
+.modal-header h3 { font-size: 22px; font-weight: 600; color: #34d399; }
+.modal-body { padding: 24px 28px; max-height: 60vh; overflow-y: auto; }
+.modal-footer { padding: 16px 28px 24px; display: flex; gap: 12px; justify-content: flex-end; border-top: 1px solid #334155; }
+
+/* ==================== FORMULARIOS ==================== */
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; font-size: 14px; font-weight: 500; color: #cbd5e1; margin-bottom: 8px; }
+.form-group input, .form-group select { width: 100%; padding: 14px 16px; border: 1.5px solid #334155; border-radius: 18px; font-size: 15px; outline: none; background: #0f172a; color: #e2e8f0; }
+.form-group input:focus, .form-group select:focus { border-color: #34d399; box-shadow: 0 0 0 3px rgba(52,211,153,0.1); }
+
+/* ==================== BOTONES ==================== */
+.btn { padding: 12px 24px; border-radius: 40px; border: none; font-weight: 600; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.btn-primary { background: #059669; color: white; }
+.btn-primary:hover { background: #047857; }
+.btn-secondary { background: #334155; color: #e2e8f0; }
+.btn-secondary:hover { background: #475569; }
+
+/* ==================== BOTÓN EXPORTAR ==================== */
+.btn-export { background: #059669; color: white; border: none; padding: 8px 16px; border-radius: 30px; cursor: pointer; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; }
+.btn-export:hover { background: #047857; transform: scale(1.02); }
+
+/* ==================== BOTÓN EDITAR ==================== */
+.btn-edit { background: #2563eb; color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+.btn-edit:hover { background: #1d4ed8; transform: scale(1.02); }
+
+/* ==================== BOTÓN ELIMINAR ==================== */
+.btn-delete { background: #dc2626; color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+.btn-delete:hover { background: #b91c1c; transform: scale(1.02); }
+
+.acciones { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+/* ==================== TABLA ==================== */
+.card { background: #1e293b; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); border: 1px solid #334155; overflow: hidden; }
+.card-header { padding: 18px 24px; border-bottom: 1px solid #334155; display: flex; align-items: center; justify-content: space-between; background: #162231; }
+.card-title { font-size: 18px; font-weight: 600; color: #e2e8f0; }
+.badge { background: #064e3b; color: #6ee7b7; padding: 5px 14px; border-radius: 30px; font-size: 13px; font-weight: 600; }
+table { width: 100%; border-collapse: collapse; }
+th { padding: 14px 18px; text-align: left; font-weight: 600; font-size: 12px; color: #34d399; text-transform: uppercase; background: #162231; border-bottom: 1px solid #334155; }
+td { padding: 16px 18px; border-bottom: 1px solid #2d3a52; color: #e2e8f0; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #162231; }
+
+/* ==================== ESTADOS ==================== */
+.loading, .empty { padding: 48px; text-align: center; color: #94a3b8; }
+.error { background: #7f1d1d; color: #fca5a5; padding: 14px 20px; border-radius: 12px; margin: 20px; border-left: 3px solid #ef4444; }
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .header-inner { padding: 16px 20px; flex-wrap: wrap; }
+  .theme-toggle { margin-left: 0; width: 100%; justify-content: center; }
+  .header h1 { font-size: 18px; }
+  .main { padding: 20px 16px; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .stat-val { font-size: 28px; }
+  .nav-btn { padding: 10px 16px; font-size: 13px; }
+  .fab-btn { bottom: 20px; right: 20px; width: 55px; height: 55px; }
+}
+@media (max-width: 480px) {
+  .stats { grid-template-columns: 1fr; }
+  .nav-btn { flex: 1 1 calc(50% - 8px); justify-content: center; }
+}
