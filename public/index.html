@@ -177,13 +177,19 @@ if (!usuario || !token || tokenExpirado(token)) {
 
   // ==================== EXPORTAR DATOS ====================
   async function exportarDatos() {
-    try {
-      const modulo = seccionActual === 'Enfermeras' ? 'enfermeras' : seccionActual;
-      window.open(`/api/exportar/${modulo}`, '_blank');
-    } catch(e) {
-      alert('Error al exportar: ' + e.message);
-    }
+  try {
+    let modulo = seccionActual;
+    // Convertir a formato que espera el backend
+    if (modulo === 'Enfermeras') modulo = 'enfermeras';
+    else if (modulo === 'Medicamentos') modulo = 'medicamentos';
+    else if (modulo === 'Citas') modulo = 'citas';
+    else modulo = modulo.toLowerCase();
+    
+    window.open(`/api/exportar/${modulo}`, '_blank');
+  } catch(e) {
+    alert('Error al exportar: ' + e.message);
   }
+}
 
   // ==================== CARGAR DATOS PARA DROPDOWNS ====================
   async function cargarCiudades() {

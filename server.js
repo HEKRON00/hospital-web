@@ -276,17 +276,18 @@ app.get('/api/tipos-habitacion', async (req, res) => {
 });
 
 // ==========================================================
-// EXPORTAR A EXCEL (UTF-8 CORREGIDO)
+// EXPORTAR A EXCEL (UTF-8 CORREGIDO 
 // ==========================================================
 app.get('/api/exportar/:modulo', async (req, res) => {
   try {
     const { modulo } = req.params;
+    const moduloLower = modulo.toLowerCase(); // Convertir a minúsculas para comparación
     const pool = await sql.connect(config);
     
     let query = '';
     let filename = '';
     
-    switch (modulo) {
+    switch (moduloLower) {
       case 'pacientes':
         query = 'SELECT * FROM dbo.vw_Pacientes ORDER BY ID';
         filename = 'pacientes.xls';
@@ -323,7 +324,7 @@ app.get('/api/exportar/:modulo', async (req, res) => {
         filename = 'habitaciones.xls';
         break;
       default:
-        return res.status(400).json({ error: 'Módulo no válido' });
+        return res.status(400).json({ error: `Módulo "${modulo}" no válido` });
     }
     
     const result = await pool.request().query(query);
