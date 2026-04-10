@@ -136,7 +136,7 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// Panel principal (protegido - redirige a login si no hay token)
+// Panel principal
 app.get('/panel', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -276,7 +276,7 @@ app.get('/api/tipos-habitacion', async (req, res) => {
 });
 
 // ==========================================================
-// EXPORTAR A EXCEL
+// EXPORTAR A EXCEL (UTF-8 CORRECTO)
 // ==========================================================
 app.get('/api/exportar/:modulo', async (req, res) => {
   try {
@@ -287,13 +287,43 @@ app.get('/api/exportar/:modulo', async (req, res) => {
     let filename = '';
     
     switch (modulo) {
-      case 'pacientes': query = 'SELECT * FROM dbo.vw_Pacientes ORDER BY ID'; filename = 'pacientes.xls'; break;
-      case 'doctores': query = 'SELECT * FROM dbo.vw_Doctores ORDER BY ID'; filename = 'doctores.xls'; break;
-      case 'enfermeras': query = 'SELECT * FROM dbo.vw_Enfermeros ORDER BY ID'; filename = 'enfermeras.xls'; break;
-      case 'medicamentos': query = 'SELECT * FROM dbo.vw_Medicamentos ORDER BY ID'; filename = 'medicamentos.xls'; break;
-      case 'citas': query = 'SELECT * FROM dbo.vw_Citas ORDER BY Fecha DESC, Hora DESC'; filename = 'citas.xls'; break;
-      case 'habitaciones': query = 'SELECT * FROM dbo.Habitaciones ORDER BY numero_habitacion'; filename = 'habitaciones.xls'; break;
-      default: return res.status(400).json({ error: 'Módulo no válido' });
+      case 'pacientes':
+        query = 'SELECT * FROM dbo.vw_Pacientes ORDER BY ID';
+        filename = 'pacientes.xls';
+        break;
+      case 'doctores':
+        query = 'SELECT * FROM dbo.vw_Doctores ORDER BY ID';
+        filename = 'doctores.xls';
+        break;
+      case 'enfermeras':
+        query = 'SELECT * FROM dbo.vw_Enfermeros ORDER BY ID';
+        filename = 'enfermeras.xls';
+        break;
+      case 'medicamentos':
+        query = 'SELECT * FROM dbo.vw_Medicamentos ORDER BY ID';
+        filename = 'medicamentos.xls';
+        break;
+      case 'citas':
+        query = 'SELECT * FROM dbo.vw_Citas ORDER BY Fecha DESC, Hora DESC';
+        filename = 'citas.xls';
+        break;
+      case 'habitaciones':
+        query = `
+          SELECT 
+            h.habitacion_id AS ID,
+            h.numero_habitacion AS Numero,
+            ISNULL(t.nombre_tipo_habitacion, 'No especificado') AS Tipo,
+            h.capacidad AS Capacidad,
+            h.estado AS Estado,
+            CONVERT(VARCHAR(10), h.ultimo_mantenimiento, 120) AS Ultimo_Mantenimiento
+          FROM dbo.Habitaciones h
+          LEFT JOIN dbo.Tipos_Habitacion t ON h.tipo_habitacion_id = t.tipo_habitacion_id
+          ORDER BY h.numero_habitacion
+        `;
+        filename = 'habitaciones.xls';
+        break;
+      default:
+        return res.status(400).json({ error: 'Módulo no válido' });
     }
     
     const result = await pool.request().query(query);
@@ -304,19 +334,31 @@ app.get('/api/exportar/:modulo', async (req, res) => {
     }
     
     const cabeceras = Object.keys(datos[0]);
-    let html = '<table border="1"><thead><tr>';
+    
+    // Construir HTML con codificación UTF-8 explícita
+    let html = '<html><head><meta charset="UTF-8"></head><body>';
+    html += '<table border="1">';
+    
+    html += '<thead><tr>';
     cabeceras.forEach(c => html += `<th>${c}</th>`);
-    html += '</tr></thead><tbody>';
+    html += '</tr></thead>';
+    
+    html += '<tbody>';
     datos.forEach(fila => {
       html += '<tr>';
-      cabeceras.forEach(c => { let val = fila[c] ?? ''; html += `<td>${val}</td>`; });
+      cabeceras.forEach(c => {
+        let val = fila[c] ?? '';
+        val = String(val).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        html += `<td>${val}</td>`;
+      });
       html += '</tr>';
     });
     html += '</tbody></table>';
+    html += '</body></html>';
     
-    res.setHeader('Content-Type', 'application/vnd.ms-excel');
+    res.setHeader('Content-Type', 'application/vnd.ms-excel; charset=UTF-8');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.send(html);
+    res.send(Buffer.from(html, 'utf-8'));
     
   } catch (err) {
     console.error('Error en exportar:', err.message);
@@ -325,11 +367,9 @@ app.get('/api/exportar/:modulo', async (req, res) => {
 });
 
 // ==========================================================
-// RUTAS PROTEGIDAS (SOLO ADMINISTRADOR)
+// PROTEGER RUTAS POST, PUT, DELETE (SOLO ADMIN)
 // ==========================================================
-
-// Middleware para proteger todas las rutas POST, PUT, DELETE
-app.use(['/api/*'], (req, res, next) => {
+app.use('/api/*', (req, res, next) => {
   if (req.method === 'GET') return next();
   verificarToken(req, res, (err) => {
     if (err) return;
