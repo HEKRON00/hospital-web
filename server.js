@@ -378,14 +378,14 @@ app.get('/api/Citas', async (req, res) => {
         p.primer_nombre + ' ' + p.apellido AS Paciente,
         ISNULL(d.primer_nombre + ' ' + d.apellido, 'No asignado') AS Doctor,
         c.fecha_cita AS Fecha,
-        c.hora_cita AS Hora,
+        CONVERT(VARCHAR(5), c.hora_cita, 108) AS Hora,
         ISNULL(e.Nombre_Estado, 'Pendiente') AS Estado,
         c.proposito AS Propósito
       FROM dbo.Citas c
       JOIN dbo.Pacientes p ON c.paciente_id = p.paciente_id
       LEFT JOIN dbo.Doctores d ON c.doctor_id = d.doctor_id
       LEFT JOIN dbo.Cat_Estados e ON c.Estado_Id = e.Estado_Id
-      ORDER BY c.cita_id DESC   -- ← Ordenado por ID descendente (más recientes primero)
+      ORDER BY c.cita_id DESC
     `);
     res.json(result.recordset);
   } catch (err) {
