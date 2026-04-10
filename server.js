@@ -8,11 +8,6 @@ app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Servir CSS explícitamente
-app.get('/css/:file', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'css', req.params.file));
-});
-
 // ==========================================================
 // CONFIGURACIÓN DE CONEXIÓN - AZURE SQL
 // ==========================================================
@@ -64,12 +59,12 @@ function verificarAdmin(req, res, next) {
 // ==========================================================
 function validarEmail(email) {
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return re.test(email);
+  return email && re.test(email);
 }
 
 function validarTelefono(telefono) {
   const re = /^[0-9\-\+\s]{8,15}$/;
-  return re.test(telefono);
+  return telefono && re.test(telefono);
 }
 
 function validarFechaFutura(fecha) {
@@ -281,7 +276,7 @@ app.get('/api/tipos-habitacion', async (req, res) => {
 });
 
 // ==========================================================
-// EXPORTAR A EXCEL (UTF-8 CORRECTO)
+// EXPORTAR A EXCEL (UTF-8 CORREGIDO)
 // ==========================================================
 app.get('/api/exportar/:modulo', async (req, res) => {
   try {
@@ -340,7 +335,6 @@ app.get('/api/exportar/:modulo', async (req, res) => {
     
     const cabeceras = Object.keys(datos[0]);
     
-    // Construir HTML con codificación UTF-8 explícita
     let html = '<html><head><meta charset="UTF-8"></head><body>';
     html += '<table border="1">';
     
@@ -372,9 +366,9 @@ app.get('/api/exportar/:modulo', async (req, res) => {
 });
 
 // ==========================================================
-// PROTEGER RUTAS POST, PUT, DELETE (SOLO ADMIN)
+// MIDDLEWARE PARA PROTEGER RUTAS POST, PUT, DELETE
 // ==========================================================
-app.use('/api/*', (req, res, next) => {
+app.use(['/api/*'], (req, res, next) => {
   if (req.method === 'GET') return next();
   verificarToken(req, res, (err) => {
     if (err) return;
@@ -382,7 +376,9 @@ app.use('/api/*', (req, res, next) => {
   });
 });
 
-// POST - Insertar
+// ==========================================================
+// RUTAS POST (Insertar)
+// ==========================================================
 app.post('/api/pacientes', async (req, res) => {
   try {
     const { nombre, apellido, fecha_nacimiento, genero, ciudad_id, telefono, correo } = req.body;
@@ -523,7 +519,9 @@ app.post('/api/habitaciones', async (req, res) => {
   }
 });
 
-// PUT - Actualizar
+// ==========================================================
+// RUTAS PUT (Actualizar)
+// ==========================================================
 app.put('/api/pacientes/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -635,7 +633,9 @@ app.put('/api/habitaciones/:id', async (req, res) => {
   }
 });
 
-// DELETE - Eliminar
+// ==========================================================
+// RUTAS DELETE (Eliminar)
+// ==========================================================
 app.delete('/api/pacientes/:id', async (req, res) => {
   try {
     const { id } = req.params;
