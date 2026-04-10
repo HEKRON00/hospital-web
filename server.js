@@ -86,7 +86,7 @@ app.get('/api/Medicamentos', async (req, res) => {
 app.get('/api/Citas', async (req, res) => {
   try {
     const pool = await sql.connect(config);
-    const result = await pool.request().query('SELECT * FROM dbo.vw_Citas ORDER BY ID DESC');
+    const result = await pool.request().query('SELECT * FROM dbo.vw_Citas ORDER BY Hora DESC');
     res.json(result.recordset);
   } catch (err) {
     res.status(500).json({ error: err.message });
