@@ -95,16 +95,16 @@
 
 <!-- ==================== JAVASCRIPT ==================== -->
 <script>
-  // Variable global para saber en qué sección estamos
   let seccionActual = 'pacientes';
-  
-  // Variables para almacenar datos de dropdowns
   let ciudadesDisponibles = [];
   let especialidadesDisponibles = [];
   let especializacionesDisponibles = [];
   let departamentosDisponibles = [];
+  let pacientesDisponibles = [];
+  let doctoresDisponibles = [];
+  let estadosDisponibles = [];
 
-  // ==================== FUNCIONES DE ESTADÍSTICAS ====================
+  // ==================== CARGAR ESTADÍSTICAS ====================
   async function cargarStat(sec) {
     try {
       const rutaAPI = sec === 'Enfermeras' ? 'Enfermeros' : sec;
@@ -112,7 +112,7 @@
       const d = await r.json();
       const el = document.getElementById('s-' + sec);
       if (el && Array.isArray(d)) el.textContent = d.length;
-    } catch(e) { console.warn('Error cargando estadística:', sec); }
+    } catch(e) { console.warn('Error:', sec); }
   }
 
   // ==================== CARGAR DATOS PARA DROPDOWNS ====================
@@ -128,21 +128,28 @@
   async function cargarDepartamentos() {
     try { const res = await fetch('/api/departamentos'); departamentosDisponibles = await res.json(); } catch(e) {}
   }
+  async function cargarPacientes() {
+    try { 
+      const res = await fetch('/api/pacientes'); 
+      const data = await res.json();
+      pacientesDisponibles = data.map(p => ({ id: p.ID, nombre: p.Nombre + ' ' + p.Apellido }));
+    } catch(e) {}
+  }
+  async function cargarDoctores() {
+    try { 
+      const res = await fetch('/api/doctores'); 
+      const data = await res.json();
+      doctoresDisponibles = data.map(d => ({ id: d.ID, nombre: d.Nombre + ' ' + d.Apellido + ' (' + d.Especialidad + ')' }));
+    } catch(e) {}
+  }
 
-  // ==================== FUNCIÓN PRINCIPAL PARA CARGAR DATOS ====================
+  // ==================== CARGAR TABLA PRINCIPAL ====================
   async function cargar(seccion, btn) {
     seccionActual = seccion;
-    
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
     
-    const titulos = {
-      'pacientes': 'Pacientes',
-      'doctores': 'Doctores',
-      'Enfermeras': 'Enfermeras',
-      'Medicamentos': 'Medicamentos',
-      'Citas': 'Citas'
-    };
+    const titulos = { 'pacientes': 'Pacientes', 'doctores': 'Doctores', 'Enfermeras': 'Enfermeras', 'Medicamentos': 'Medicamentos', 'Citas': 'Citas' };
     document.getElementById('card-title').textContent = titulos[seccion] || seccion;
     document.getElementById('contenido').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-pulse"></i> Cargando datos...</div>';
 
@@ -152,15 +159,14 @@
       const datos = await res.json();
 
       if (datos.error) {
-        document.getElementById('contenido').innerHTML = `<div class="error"><i class="fas fa-exclamation-triangle"></i> Error: ${datos.error}</div>`;
-        document.getElementById('count-badge').textContent = 'Error';
+        document.getElementById('contenido').innerHTML = `<div class="error">Error: ${datos.error}</div>`;
         return;
       }
 
       document.getElementById('count-badge').textContent = datos.length + ' registro' + (datos.length !== 1 ? 's' : '');
 
       if (!datos.length) {
-        document.getElementById('contenido').innerHTML = '<div class="empty"><i class="fas fa-database"></i> No hay registros en esta tabla.</div>';
+        document.getElementById('contenido').innerHTML = '<div class="empty">No hay registros.</div>';
         return;
       }
 
@@ -176,23 +182,20 @@
       html += '</tbody></table></div>';
       document.getElementById('contenido').innerHTML = html;
     } catch(err) {
-      document.getElementById('contenido').innerHTML = `<div class="error"><i class="fas fa-exclamation-triangle"></i> Error de conexión: ${err.message}</div>`;
+      document.getElementById('contenido').innerHTML = `<div class="error">Error: ${err.message}</div>`;
     }
   }
 
-  // ==================== FUNCIONES DEL MODAL ====================
+  // ==================== ABRIR MODAL CON FORMULARIO ====================
   async function abrirModal() {
-    const modal = document.getElementById('modalFormulario');
-    const titulo = document.getElementById('modal-titulo');
-    const body = document.getElementById('modal-body');
-    
-    // Cargar datos necesarios según la sección
+    // Cargar datos necesarios
     if (seccionActual === 'pacientes' && ciudadesDisponibles.length === 0) await cargarCiudades();
     if (seccionActual === 'doctores' && especialidadesDisponibles.length === 0) await cargarEspecialidades();
     if (seccionActual === 'Enfermeras' && especializacionesDisponibles.length === 0) await cargarEspecializaciones();
     if (seccionActual === 'Enfermeras' && departamentosDisponibles.length === 0) await cargarDepartamentos();
+    if (seccionActual === 'Citas' && pacientesDisponibles.length === 0) await cargarPacientes();
+    if (seccionActual === 'Citas' && doctoresDisponibles.length === 0) await cargarDoctores();
     
-    // Configurar título y formulario según la sección actual
     const configs = {
       'pacientes': {
         titulo: 'Nuevo Paciente',
@@ -203,7 +206,7 @@
           { label: 'Género', id: 'genero', type: 'select', opciones: ['M', 'F'] },
           { label: 'Ciudad', id: 'ciudad_id', type: 'ciudades' },
           { label: 'Teléfono', id: 'telefono', type: 'tel' },
-          { label: 'Correo Electrónico', id: 'correo', type: 'email' }
+          { label: 'Correo', id: 'correo', type: 'email' }
         ]
       },
       'doctores': {
@@ -213,7 +216,7 @@
           { label: 'Apellido', id: 'apellido', type: 'text', required: true },
           { label: 'Especialidad', id: 'especialidad', type: 'especialidades', required: true },
           { label: 'Teléfono', id: 'telefono', type: 'tel' },
-          { label: 'Correo Electrónico', id: 'correo', type: 'email' }
+          { label: 'Correo', id: 'correo', type: 'email' }
         ]
       },
       'Enfermeras': {
@@ -233,57 +236,59 @@
           { label: 'Marca', id: 'marca', type: 'text' },
           { label: 'Tipo', id: 'tipo', type: 'text' },
           { label: 'Dosis', id: 'dosis', type: 'text' },
-          { label: 'Cantidad en Stock', id: 'stock', type: 'number', required: true }
+          { label: 'Stock', id: 'stock', type: 'number', required: true }
         ]
       },
       'Citas': {
         titulo: 'Nueva Cita',
         campos: [
-          { label: 'ID Paciente', id: 'paciente_id', type: 'number', required: true },
-          { label: 'ID Doctor', id: 'doctor_id', type: 'number' },
+          { label: 'Paciente', id: 'paciente_id', type: 'pacientes', required: true },
+          { label: 'Doctor', id: 'doctor_id', type: 'doctores' },
           { label: 'Fecha', id: 'fecha_cita', type: 'date', required: true },
           { label: 'Hora', id: 'hora_cita', type: 'time', required: true },
-          { label: 'ID Estado', id: 'estado_id', type: 'number' },
           { label: 'Propósito', id: 'proposito', type: 'text' }
         ]
       }
     };
 
     const config = configs[seccionActual];
-    
-    if (!config) {
-      alert('Formulario no disponible para esta sección aún.');
-      return;
-    }
+    if (!config) { alert('Formulario no disponible'); return; }
 
-    titulo.innerHTML = `<i class="fas fa-plus-circle"></i> ${config.titulo}`;
+    document.getElementById('modal-titulo').innerHTML = `<i class="fas fa-plus-circle"></i> ${config.titulo}`;
     
     let html = '<form id="formDinamico">';
     config.campos.forEach(campo => {
-      html += `<div class="form-group">`;
-      html += `<label>${campo.label} ${campo.required ? '<span style="color:red">*</span>' : ''}</label>`;
+      html += `<div class="form-group"><label>${campo.label} ${campo.required ? '<span style="color:red">*</span>' : ''}</label>`;
       
       if (campo.type === 'ciudades') {
         html += `<select id="${campo.id}" ${campo.required ? 'required' : ''}><option value="">Seleccione una ciudad...</option>`;
-        ciudadesDisponibles.forEach(item => html += `<option value="${item.id}">${item.nombre}</option>`);
+        ciudadesDisponibles.forEach(c => html += `<option value="${c.id}">${c.nombre}</option>`);
         html += `</select>`;
       } else if (campo.type === 'especialidades') {
         html += `<select id="${campo.id}" ${campo.required ? 'required' : ''}><option value="">Seleccione una especialidad...</option>`;
-        especialidadesDisponibles.forEach(item => html += `<option value="${item.nombre}">${item.nombre}</option>`);
+        especialidadesDisponibles.forEach(e => html += `<option value="${e.nombre}">${e.nombre}</option>`);
         html += `<option value="__OTRA__">➕ Otra (escribir)</option></select>`;
         html += `<input type="text" id="${campo.id}_manual" placeholder="Especifique otra especialidad" style="display:none; margin-top:10px;">`;
       } else if (campo.type === 'especializaciones') {
         html += `<select id="${campo.id}" ${campo.required ? 'required' : ''}><option value="">Seleccione una especialización...</option>`;
-        especializacionesDisponibles.forEach(item => html += `<option value="${item.nombre}">${item.nombre}</option>`);
+        especializacionesDisponibles.forEach(e => html += `<option value="${e.nombre}">${e.nombre}</option>`);
         html += `<option value="__OTRA__">➕ Otra (escribir)</option></select>`;
         html += `<input type="text" id="${campo.id}_manual" placeholder="Especifique otra especialización" style="display:none; margin-top:10px;">`;
       } else if (campo.type === 'departamentos') {
         html += `<select id="${campo.id}" ${campo.required ? 'required' : ''}><option value="">Seleccione un departamento...</option>`;
-        departamentosDisponibles.forEach(item => html += `<option value="${item.id}">${item.nombre}</option>`);
+        departamentosDisponibles.forEach(d => html += `<option value="${d.id}">${d.nombre}</option>`);
+        html += `</select>`;
+      } else if (campo.type === 'pacientes') {
+        html += `<select id="${campo.id}" ${campo.required ? 'required' : ''}><option value="">Seleccione un paciente...</option>`;
+        pacientesDisponibles.forEach(p => html += `<option value="${p.id}">${p.nombre}</option>`);
+        html += `</select>`;
+      } else if (campo.type === 'doctores') {
+        html += `<select id="${campo.id}" ${campo.required ? 'required' : ''}><option value="">Seleccione un doctor...</option>`;
+        doctoresDisponibles.forEach(d => html += `<option value="${d.id}">${d.nombre}</option>`);
         html += `</select>`;
       } else if (campo.type === 'select') {
         html += `<select id="${campo.id}" ${campo.required ? 'required' : ''}><option value="">Seleccione...</option>`;
-        campo.opciones.forEach(op => html += `<option value="${op}">${op}</option>`);
+        campo.opciones.forEach(o => html += `<option value="${o}">${o}</option>`);
         html += `</select>`;
       } else {
         html += `<input type="${campo.type}" id="${campo.id}" ${campo.required ? 'required' : ''} placeholder="Ingrese ${campo.label.toLowerCase()}">`;
@@ -291,114 +296,58 @@
       html += `</div>`;
     });
     html += '</form>';
-    body.innerHTML = html;
+    document.getElementById('modal-body').innerHTML = html;
     
-    // Evento para mostrar/ocultar campo manual en especialidades
-    const selectEspecialidad = document.getElementById('especialidad');
-    if (selectEspecialidad) {
-      selectEspecialidad.addEventListener('change', function() {
-        const manualInput = document.getElementById('especialidad_manual');
-        if (this.value === '__OTRA__') {
-          manualInput.style.display = 'block';
-          manualInput.required = true;
-        } else {
-          manualInput.style.display = 'none';
-          manualInput.required = false;
-        }
-      });
-    }
+    // Eventos para "Otra" opción
+    const selectEsp = document.getElementById('especialidad');
+    if (selectEsp) selectEsp.addEventListener('change', function() {
+      document.getElementById('especialidad_manual').style.display = this.value === '__OTRA__' ? 'block' : 'none';
+    });
+    const selectEspz = document.getElementById('especializacion');
+    if (selectEspz) selectEspz.addEventListener('change', function() {
+      document.getElementById('especializacion_manual').style.display = this.value === '__OTRA__' ? 'block' : 'none';
+    });
     
-    // Evento para mostrar/ocultar campo manual en especializaciones
-    const selectEspecializacion = document.getElementById('especializacion');
-    if (selectEspecializacion) {
-      selectEspecializacion.addEventListener('change', function() {
-        const manualInput = document.getElementById('especializacion_manual');
-        if (this.value === '__OTRA__') {
-          manualInput.style.display = 'block';
-          manualInput.required = true;
-        } else {
-          manualInput.style.display = 'none';
-          manualInput.required = false;
-        }
-      });
-    }
-    
-    modal.classList.add('active');
+    document.getElementById('modalFormulario').classList.add('active');
   }
 
-  function cerrarModal() {
-    document.getElementById('modalFormulario').classList.remove('active');
-  }
+  function cerrarModal() { document.getElementById('modalFormulario').classList.remove('active'); }
 
-  // ==================== GUARDAR REGISTRO (INSERT) ====================
+  // ==================== GUARDAR REGISTRO ====================
   async function guardarRegistro() {
     const form = document.getElementById('formDinamico');
     const campos = form.querySelectorAll('input, select');
+    for (let c of campos) if (c.required && !c.value.trim()) { alert('Complete campos obligatorios'); return; }
     
-    // Validar campos requeridos
-    for (let campo of campos) {
-      if (campo.required && !campo.value.trim()) {
-        alert('Por favor complete todos los campos obligatorios.');
-        return;
-      }
-    }
-
-    // Construir objeto de datos
     const data = {};
-    campos.forEach(campo => {
-      if (campo.value.trim() !== '') {
-        if (campo.id === 'especialidad' && campo.value === '__OTRA__') {
-          const manual = document.getElementById('especialidad_manual');
-          data[campo.id] = manual.value;
-        } else if (campo.id === 'especializacion' && campo.value === '__OTRA__') {
-          const manual = document.getElementById('especializacion_manual');
-          data[campo.id] = manual.value;
-        } else {
-          data[campo.id] = campo.value;
-        }
+    campos.forEach(c => {
+      if (c.value.trim()) {
+        if (c.id === 'especialidad' && c.value === '__OTRA__') data[c.id] = document.getElementById('especialidad_manual').value;
+        else if (c.id === 'especializacion' && c.value === '__OTRA__') data[c.id] = document.getElementById('especializacion_manual').value;
+        else data[c.id] = c.value;
       }
     });
 
+    // Para citas, estado por defecto = 1 (Pendiente)
+    if (seccionActual === 'Citas') data.estado_id = 1;
+
     try {
       const rutaAPI = seccionActual === 'Enfermeras' ? 'Enfermeras' : seccionActual;
-      const response = await fetch('/api/' + rutaAPI, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-
-      const result = await response.json();
-      
-      if (result.success) {
-        alert('✅ Registro agregado exitosamente');
-        cerrarModal();
-        cargar(seccionActual, document.querySelector('.nav-btn.active'));
-        cargarStat(seccionActual);
-      } else {
-        alert('❌ Error: ' + (result.error || 'No se pudo agregar'));
-      }
-    } catch (err) {
-      alert('❌ Error de conexión: ' + err.message);
-    }
+      const res = await fetch('/api/' + rutaAPI, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+      const result = await res.json();
+      if (result.success) { alert('✅ Agregado'); cerrarModal(); cargar(seccionActual, document.querySelector('.nav-btn.active')); cargarStat(seccionActual); }
+      else alert('❌ Error: ' + result.error);
+    } catch(e) { alert('❌ Error: ' + e.message); }
   }
 
-  // Cerrar modal si se hace clic fuera
-  document.getElementById('modalFormulario').addEventListener('click', function(e) {
-    if (e.target === this) cerrarModal();
-  });
+  document.getElementById('modalFormulario').addEventListener('click', function(e) { if (e.target === this) cerrarModal(); });
 
   // ==================== INICIALIZAR ====================
   async function inicializar() {
-    await Promise.all([
-      cargarCiudades(),
-      cargarEspecialidades(),
-      cargarEspecializaciones(),
-      cargarDepartamentos()
-    ]);
+    await Promise.all([cargarCiudades(), cargarEspecialidades(), cargarEspecializaciones(), cargarDepartamentos(), cargarPacientes(), cargarDoctores()]);
     ['pacientes', 'doctores', 'Enfermeras', 'Medicamentos', 'Citas'].forEach(cargarStat);
     cargar('pacientes', document.querySelector('.nav-btn'));
   }
-  
   inicializar();
 </script>
 </body>
