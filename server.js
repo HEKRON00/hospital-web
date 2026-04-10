@@ -623,7 +623,7 @@ app.delete('/api/Citas/:id', async (req, res) => {
 });
 
 // ==========================================================
-// EXPORTAR A EXCEL (CSV)
+// EXPORTAR A EXCEL (CSV) - CORREGIDO CON FECHAS FORMATEADAS
 // ==========================================================
 app.get('/api/exportar/:modulo', async (req, res) => {
   try {
@@ -634,13 +634,39 @@ app.get('/api/exportar/:modulo', async (req, res) => {
     let filename = '';
     
     switch (modulo) {
-      case 'pacientes': query = 'SELECT * FROM dbo.vw_Pacientes'; filename = 'pacientes.csv'; break;
-      case 'doctores': query = 'SELECT * FROM dbo.vw_Doctores'; filename = 'doctores.csv'; break;
-      case 'enfermeras': query = 'SELECT * FROM dbo.vw_Enfermeros'; filename = 'enfermeras.csv'; break;
-      case 'medicamentos': query = 'SELECT * FROM dbo.vw_Medicamentos'; filename = 'medicamentos.csv'; break;
-      case 'citas': query = 'SELECT * FROM dbo.vw_Citas'; filename = 'citas.csv'; break;
-      case 'habitaciones': query = 'SELECT * FROM dbo.Habitaciones'; filename = 'habitaciones.csv'; break;
-      default: return res.status(400).json({ error: 'Módulo no válido' });
+      case 'pacientes':
+        query = `
+          SELECT 
+            ID, Nombre, Apellido, 
+            FORMAT(Nacimiento, 'yyyy-MM-dd') AS Nacimiento,
+            Género, Ciudad, Teléfono, Correo 
+          FROM dbo.vw_Pacientes 
+          ORDER BY ID
+        `;
+        filename = 'pacientes.csv';
+        break;
+      case 'doctores':
+        query = 'SELECT * FROM dbo.vw_Doctores ORDER BY ID';
+        filename = 'doctores.csv';
+        break;
+      case 'enfermeras':
+        query = 'SELECT * FROM dbo.vw_Enfermeros ORDER BY ID';
+        filename = 'enfermeras.csv';
+        break;
+      case 'medicamentos':
+        query = 'SELECT * FROM dbo.vw_Medicamentos ORDER BY ID';
+        filename = 'medicamentos.csv';
+        break;
+      case 'citas':
+        query = 'SELECT * FROM dbo.vw_Citas ORDER BY Fecha DESC, Hora DESC';
+        filename = 'citas.csv';
+        break;
+      case 'habitaciones':
+        query = 'SELECT * FROM dbo.Habitaciones ORDER BY numero_habitacion';
+        filename = 'habitaciones.csv';
+        break;
+      default:
+        return res.status(400).json({ error: 'Módulo no válido' });
     }
     
     const result = await pool.request().query(query);
@@ -656,7 +682,9 @@ app.get('/api/exportar/:modulo', async (req, res) => {
     datos.forEach(fila => {
       const valores = cabeceras.map(c => {
         let val = fila[c] || '';
-        if (typeof val === 'string' && (val.includes(',') || val.includes('"'))) {
+        // Convertir a string y escapar comillas
+        val = String(val);
+        if (val.includes(',') || val.includes('"') || val.includes('\n')) {
           val = '"' + val.replace(/"/g, '""') + '"';
         }
         return val;
@@ -666,7 +694,7 @@ app.get('/api/exportar/:modulo', async (req, res) => {
     
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.send('\uFEFF' + csv);
+    res.send('\uFEFF' + csv); // BOM para UTF-8
     
   } catch (err) {
     console.error('Error en exportar:', err.message);
