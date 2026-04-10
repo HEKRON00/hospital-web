@@ -8,6 +8,11 @@ app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Servir CSS explícitamente
+app.get('/css/:file', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'css', req.params.file));
+});
+
 // ==========================================================
 // CONFIGURACIÓN DE CONEXIÓN - AZURE SQL
 // ==========================================================
