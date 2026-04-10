@@ -385,7 +385,7 @@ app.get('/api/Citas', async (req, res) => {
       JOIN dbo.Pacientes p ON c.paciente_id = p.paciente_id
       LEFT JOIN dbo.Doctores d ON c.doctor_id = d.doctor_id
       LEFT JOIN dbo.Cat_Estados e ON c.Estado_Id = e.Estado_Id
-      ORDER BY c.cita_id DESC   -- ← Ordenado por ID descendente (más recientes primero)
+      ORDER BY c.cita_id ASC   -- ← Ordenado por ID descendente (más recientes primero)
     `);
     res.json(result.recordset);
   } catch (err) {
