@@ -623,7 +623,7 @@ app.delete('/api/Citas/:id', async (req, res) => {
 });
 
 // ==========================================================
-// EXPORTAR A EXCEL (CSV) - CORREGIDO CON FECHAS FORMATEADAS
+// EXPORTAR A EXCEL (CSV) - CON SEPARADOR PUNTO Y COMA
 // ==========================================================
 app.get('/api/exportar/:modulo', async (req, res) => {
   try {
@@ -635,14 +635,7 @@ app.get('/api/exportar/:modulo', async (req, res) => {
     
     switch (modulo) {
       case 'pacientes':
-        query = `
-          SELECT 
-            ID, Nombre, Apellido, 
-            FORMAT(Nacimiento, 'yyyy-MM-dd') AS Nacimiento,
-            Género, Ciudad, Teléfono, Correo 
-          FROM dbo.vw_Pacientes 
-          ORDER BY ID
-        `;
+        query = 'SELECT * FROM dbo.vw_Pacientes ORDER BY ID';
         filename = 'pacientes.csv';
         break;
       case 'doctores':
@@ -677,19 +670,21 @@ app.get('/api/exportar/:modulo', async (req, res) => {
     }
     
     const cabeceras = Object.keys(datos[0]);
-    let csv = cabeceras.join(',') + '\n';
+    
+    // 🔥 Usar punto y coma (;) como separador para Excel en español
+    let csv = cabeceras.join(';') + '\n';
     
     datos.forEach(fila => {
       const valores = cabeceras.map(c => {
-        let val = fila[c] || '';
-        // Convertir a string y escapar comillas
+        let val = fila[c] ?? '';
         val = String(val);
-        if (val.includes(',') || val.includes('"') || val.includes('\n')) {
+        // Si tiene punto y coma, encerrar entre comillas
+        if (val.includes(';') || val.includes('"') || val.includes('\n')) {
           val = '"' + val.replace(/"/g, '""') + '"';
         }
         return val;
       });
-      csv += valores.join(',') + '\n';
+      csv += valores.join(';') + '\n';
     });
     
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
@@ -701,7 +696,6 @@ app.get('/api/exportar/:modulo', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
 // ==========================================================
 // INICIAR SERVIDOR
 // ==========================================================
