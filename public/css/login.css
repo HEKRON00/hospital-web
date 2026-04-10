@@ -1,0 +1,158 @@
+/* ==================== RESET ==================== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ==================== FONDO ==================== */
+body {
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  background: linear-gradient(135deg, #0F6E56 0%, #0a4e3c 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* ==================== CONTENEDOR PRINCIPAL ==================== */
+.login-container {
+  background: white;
+  border-radius: 28px;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3);
+  width: 100%;
+  max-width: 420px;
+  padding: 40px;
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==================== LOGO ==================== */
+.logo {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.logo i {
+  font-size: 50px;
+  color: #0F6E56;
+  background: #e0f2e9;
+  padding: 20px;
+  border-radius: 50%;
+}
+
+.logo h1 {
+  color: #0F6E56;
+  font-size: 24px;
+  margin-top: 15px;
+}
+
+.logo p {
+  color: #64748b;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+/* ==================== FORMULARIO ==================== */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #334155;
+  margin-bottom: 8px;
+}
+
+.form-group label i {
+  color: #0F6E56;
+  width: 20px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1.5px solid #d1e0da;
+  border-radius: 18px;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.form-group input:focus {
+  border-color: #0F6E56;
+  box-shadow: 0 0 0 3px rgba(15,110,86,0.1);
+}
+
+/* ==================== BOTÓN ==================== */
+.btn-login {
+  width: 100%;
+  padding: 14px;
+  background: #0F6E56;
+  color: white;
+  border: none;
+  border-radius: 40px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.2s;
+  margin-top: 10px;
+}
+
+.btn-login:hover {
+  background: #0a523f;
+  transform: scale(1.02);
+}
+
+/* ==================== MENSAJE DE ERROR ==================== */
+.error-message {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  display: none;
+  border-left: 3px solid #dc2626;
+}
+
+.error-message i {
+  margin-right: 8px;
+}
+
+/* ==================== CREDENCIALES DEMO ==================== */
+.demo-credentials {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid #e2eee9;
+  font-size: 13px;
+  color: #64748b;
+  text-align: center;
+}
+
+.demo-credentials strong {
+  color: #0F6E56;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 480px) {
+  .login-container {
+    padding: 30px 20px;
+  }
+  
+  .logo i {
+    font-size: 40px;
+    padding: 15px;
+  }
+  
+  .logo h1 {
+    font-size: 20px;
+  }
+}

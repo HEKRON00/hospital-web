@@ -24,6 +24,37 @@ const config = {
 };
 
 // ==========================================================
+// MIDDLEWARE DE AUTENTICACIÓN
+// ==========================================================
+function verificarToken(req, res, next) {
+  const token = req.headers['authorization']?.replace('Bearer ', '');
+  
+  if (!token) {
+    return res.status(401).json({ error: 'No autorizado' });
+  }
+  
+  try {
+    const decoded = JSON.parse(Buffer.from(token, 'base64').toString());
+    
+    if (decoded.exp < Date.now()) {
+      return res.status(401).json({ error: 'Sesión expirada' });
+    }
+    
+    req.usuario = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: 'Token inválido' });
+  }
+}
+
+function verificarAdmin(req, res, next) {
+  if (req.usuario?.rol !== 'Administrador') {
+    return res.status(403).json({ error: 'Acceso denegado. Se requiere rol de Administrador.' });
+  }
+  next();
+}
+
+// ==========================================================
 // FUNCIONES DE VALIDACIÓN
 // ==========================================================
 function validarEmail(email) {
@@ -41,14 +72,77 @@ function validarFechaFutura(fecha) {
 }
 
 // ==========================================================
-// RUTA PRINCIPAL
+// RUTAS PÚBLICAS (SIN AUTENTICACIÓN)
 // ==========================================================
+
+// Redirigir raíz a login
 app.get('/', (req, res) => {
+  res.redirect('/login');
+});
+
+// Página de login
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+// API de login
+app.post('/api/login', async (req, res) => {
+  try {
+    const { usuario, contrasena } = req.body;
+    
+    if (!usuario || !contrasena) {
+      return res.status(400).json({ error: 'Usuario y contraseña requeridos' });
+    }
+    
+    const pool = await sql.connect(config);
+    const result = await pool.request()
+      .input('nombre_usuario', sql.NVarChar, usuario)
+      .input('contrasena', sql.NVarChar, contrasena)
+      .query(`
+        SELECT usuario_id, nombre_usuario, nombre_completo, rol 
+        FROM dbo.Usuarios 
+        WHERE nombre_usuario = @nombre_usuario 
+          AND contrasena = @contrasena 
+          AND activo = 1
+      `);
+    
+    if (result.recordset.length === 0) {
+      return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
+    }
+    
+    const usuarioData = result.recordset[0];
+    
+    const token = Buffer.from(JSON.stringify({
+      id: usuarioData.usuario_id,
+      usuario: usuarioData.nombre_usuario,
+      rol: usuarioData.rol,
+      exp: Date.now() + (24 * 60 * 60 * 1000)
+    })).toString('base64');
+    
+    res.json({
+      success: true,
+      token,
+      usuario: {
+        id: usuarioData.usuario_id,
+        nombre_usuario: usuarioData.nombre_usuario,
+        nombre_completo: usuarioData.nombre_completo,
+        rol: usuarioData.rol
+      }
+    });
+    
+  } catch (err) {
+    console.error('Error en login:', err.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Panel principal (protegido - redirige a login si no hay token)
+app.get('/panel', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // ==========================================================
-// RUTAS GET - VISTAS
+// RUTAS GET (Públicas - solo lectura)
 // ==========================================================
 app.get('/api/pacientes', async (req, res) => {
   try {
@@ -110,6 +204,27 @@ app.get('/api/Citas', async (req, res) => {
   }
 });
 
+app.get('/api/habitaciones', async (req, res) => {
+  try {
+    const pool = await sql.connect(config);
+    const result = await pool.request().query(`
+      SELECT 
+        h.habitacion_id AS ID,
+        h.numero_habitacion AS Numero,
+        ISNULL(t.nombre_tipo_habitacion, 'No especificado') AS Tipo,
+        h.capacidad AS Capacidad,
+        h.estado AS Estado,
+        CONVERT(VARCHAR(10), h.ultimo_mantenimiento, 120) AS Ultimo_Mantenimiento
+      FROM dbo.Habitaciones h
+      LEFT JOIN dbo.Tipos_Habitacion t ON h.tipo_habitacion_id = t.tipo_habitacion_id
+      ORDER BY h.numero_habitacion
+    `);
+    res.json(result.recordset);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/ciudades', async (req, res) => {
   try {
     const pool = await sql.connect(config);
@@ -150,141 +265,85 @@ app.get('/api/departamentos', async (req, res) => {
   }
 });
 
-// ==========================================================
-// MÓDULO DE HABITACIONES
-// ==========================================================
-app.get('/api/habitaciones', async (req, res) => {
-  try {
-    const pool = await sql.connect(config);
-    const result = await pool.request().query(`
-      SELECT 
-        h.habitacion_id AS ID,
-        h.numero_habitacion AS Numero,
-        ISNULL(t.nombre_tipo_habitacion, 'No especificado') AS Tipo,
-        h.capacidad AS Capacidad,
-        h.estado AS Estado,
-        CONVERT(VARCHAR(10), h.ultimo_mantenimiento, 120) AS Ultimo_Mantenimiento
-      FROM dbo.Habitaciones h
-      LEFT JOIN dbo.Tipos_Habitacion t ON h.tipo_habitacion_id = t.tipo_habitacion_id
-      ORDER BY h.numero_habitacion
-    `);
-    res.json(result.recordset);
-  } catch (err) {
-    console.error('Error en /api/habitaciones:', err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-
 app.get('/api/tipos-habitacion', async (req, res) => {
   try {
     const pool = await sql.connect(config);
-    const result = await pool.request().query(`
-      SELECT tipo_habitacion_id AS id, nombre_tipo_habitacion AS nombre 
-      FROM dbo.Tipos_Habitacion 
-      ORDER BY nombre_tipo_habitacion
-    `);
+    const result = await pool.request().query('SELECT tipo_habitacion_id AS id, nombre_tipo_habitacion AS nombre FROM dbo.Tipos_Habitacion ORDER BY nombre_tipo_habitacion');
     res.json(result.recordset);
   } catch (err) {
-    console.error('Error en /api/tipos-habitacion:', err.message);
     res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/habitaciones', async (req, res) => {
-  try {
-    const { numero, tipo_id, capacidad, estado } = req.body;
-    
-    if (!numero) {
-      return res.status(400).json({ error: 'El número de habitación es obligatorio' });
-    }
-    
-    const pool = await sql.connect(config);
-    await pool.request()
-      .input('numero_habitacion', sql.VarChar, numero)
-      .input('tipo_habitacion_id', sql.Int, tipo_id || null)
-      .input('capacidad', sql.Int, capacidad || 1)
-      .input('estado', sql.NVarChar, estado || 'Disponible')
-      .query(`
-        INSERT INTO dbo.Habitaciones (numero_habitacion, tipo_habitacion_id, capacidad, estado, ultimo_mantenimiento)
-        VALUES (@numero_habitacion, @tipo_habitacion_id, @capacidad, @estado, GETDATE())
-      `);
-    
-    res.json({ success: true, message: 'Habitación agregada correctamente' });
-  } catch (err) {
-    console.error('Error en POST /api/habitaciones:', err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.put('/api/habitaciones/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { numero, tipo_id, capacidad, estado } = req.body;
-    const pool = await sql.connect(config);
-    
-    await pool.request()
-      .input('id', sql.Int, id)
-      .input('numero_habitacion', sql.VarChar, numero)
-      .input('tipo_habitacion_id', sql.Int, tipo_id || null)
-      .input('capacidad', sql.Int, capacidad || 1)
-      .input('estado', sql.NVarChar, estado || 'Disponible')
-      .query(`
-        UPDATE dbo.Habitaciones SET 
-          numero_habitacion = @numero_habitacion,
-          tipo_habitacion_id = @tipo_habitacion_id,
-          capacidad = @capacidad,
-          estado = @estado
-        WHERE habitacion_id = @id
-      `);
-    
-    res.json({ success: true, message: 'Habitación actualizada correctamente' });
-  } catch (err) {
-    console.error('Error en PUT /api/habitaciones:', err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.delete('/api/habitaciones/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const pool = await sql.connect(config);
-    
-    await pool.request()
-      .input('id', sql.Int, id)
-      .query('DELETE FROM dbo.Habitaciones WHERE habitacion_id = @id');
-    
-    res.json({ success: true, message: 'Habitación eliminada correctamente' });
-  } catch (err) {
-    console.error('Error en DELETE /api/habitaciones:', err.message);
-    
-    if (err.message.includes('REFERENCE constraint')) {
-      res.status(400).json({ 
-        error: 'No se puede eliminar esta habitación porque tiene asignaciones pendientes.' 
-      });
-    } else {
-      res.status(500).json({ error: err.message });
-    }
   }
 });
 
 // ==========================================================
-// RUTAS POST - CON VALIDACIONES
+// EXPORTAR A EXCEL
 // ==========================================================
+app.get('/api/exportar/:modulo', async (req, res) => {
+  try {
+    const { modulo } = req.params;
+    const pool = await sql.connect(config);
+    
+    let query = '';
+    let filename = '';
+    
+    switch (modulo) {
+      case 'pacientes': query = 'SELECT * FROM dbo.vw_Pacientes ORDER BY ID'; filename = 'pacientes.xls'; break;
+      case 'doctores': query = 'SELECT * FROM dbo.vw_Doctores ORDER BY ID'; filename = 'doctores.xls'; break;
+      case 'enfermeras': query = 'SELECT * FROM dbo.vw_Enfermeros ORDER BY ID'; filename = 'enfermeras.xls'; break;
+      case 'medicamentos': query = 'SELECT * FROM dbo.vw_Medicamentos ORDER BY ID'; filename = 'medicamentos.xls'; break;
+      case 'citas': query = 'SELECT * FROM dbo.vw_Citas ORDER BY Fecha DESC, Hora DESC'; filename = 'citas.xls'; break;
+      case 'habitaciones': query = 'SELECT * FROM dbo.Habitaciones ORDER BY numero_habitacion'; filename = 'habitaciones.xls'; break;
+      default: return res.status(400).json({ error: 'Módulo no válido' });
+    }
+    
+    const result = await pool.request().query(query);
+    const datos = result.recordset;
+    
+    if (datos.length === 0) {
+      return res.status(404).json({ error: 'No hay datos para exportar' });
+    }
+    
+    const cabeceras = Object.keys(datos[0]);
+    let html = '<table border="1"><thead><tr>';
+    cabeceras.forEach(c => html += `<th>${c}</th>`);
+    html += '</tr></thead><tbody>';
+    datos.forEach(fila => {
+      html += '<tr>';
+      cabeceras.forEach(c => { let val = fila[c] ?? ''; html += `<td>${val}</td>`; });
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    
+    res.setHeader('Content-Type', 'application/vnd.ms-excel');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(html);
+    
+  } catch (err) {
+    console.error('Error en exportar:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ==========================================================
+// RUTAS PROTEGIDAS (SOLO ADMINISTRADOR)
+// ==========================================================
+
+// Middleware para proteger todas las rutas POST, PUT, DELETE
+app.use(['/api/*'], (req, res, next) => {
+  if (req.method === 'GET') return next();
+  verificarToken(req, res, (err) => {
+    if (err) return;
+    verificarAdmin(req, res, next);
+  });
+});
+
+// POST - Insertar
 app.post('/api/pacientes', async (req, res) => {
   try {
     const { nombre, apellido, fecha_nacimiento, genero, ciudad_id, telefono, correo } = req.body;
-    
-    if (!nombre || !apellido || !fecha_nacimiento) {
-      return res.status(400).json({ error: 'Nombre, apellido y fecha son obligatorios' });
-    }
-    
-    if (correo && !validarEmail(correo)) {
-      return res.status(400).json({ error: 'Formato de correo electrónico inválido' });
-    }
-    
-    if (telefono && !validarTelefono(telefono)) {
-      return res.status(400).json({ error: 'Formato de teléfono inválido (8-15 dígitos)' });
-    }
+    if (!nombre || !apellido || !fecha_nacimiento) return res.status(400).json({ error: 'Nombre, apellido y fecha son obligatorios' });
+    if (correo && !validarEmail(correo)) return res.status(400).json({ error: 'Formato de correo inválido' });
+    if (telefono && !validarTelefono(telefono)) return res.status(400).json({ error: 'Formato de teléfono inválido' });
     
     const pool = await sql.connect(config);
     await pool.request()
@@ -299,7 +358,6 @@ app.post('/api/pacientes', async (req, res) => {
     
     res.json({ success: true, message: 'Paciente agregado correctamente' });
   } catch (err) {
-    console.error('Error en POST /api/pacientes:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -307,14 +365,8 @@ app.post('/api/pacientes', async (req, res) => {
 app.post('/api/doctores', async (req, res) => {
   try {
     const { nombre, apellido, especialidad, telefono, correo, horario } = req.body;
-    
-    if (!nombre || !apellido || !especialidad) {
-      return res.status(400).json({ error: 'Nombre, apellido y especialidad son obligatorios' });
-    }
-    
-    if (correo && !validarEmail(correo)) {
-      return res.status(400).json({ error: 'Formato de correo electrónico inválido' });
-    }
+    if (!nombre || !apellido || !especialidad) return res.status(400).json({ error: 'Nombre, apellido y especialidad son obligatorios' });
+    if (correo && !validarEmail(correo)) return res.status(400).json({ error: 'Formato de correo inválido' });
     
     const pool = await sql.connect(config);
     await pool.request()
@@ -328,7 +380,6 @@ app.post('/api/doctores', async (req, res) => {
     
     res.json({ success: true, message: 'Doctor agregado correctamente' });
   } catch (err) {
-    console.error('Error en POST /api/doctores:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -336,10 +387,7 @@ app.post('/api/doctores', async (req, res) => {
 app.post('/api/Enfermeras', async (req, res) => {
   try {
     const { nombre, apellido, especializacion, departamento_id, horas_turno } = req.body;
-    
-    if (!nombre || !apellido) {
-      return res.status(400).json({ error: 'Nombre y apellido son obligatorios' });
-    }
+    if (!nombre || !apellido) return res.status(400).json({ error: 'Nombre y apellido son obligatorios' });
     
     const pool = await sql.connect(config);
     const transaction = new sql.Transaction(pool);
@@ -364,7 +412,6 @@ app.post('/api/Enfermeras', async (req, res) => {
       throw err;
     }
   } catch (err) {
-    console.error('Error en POST /api/Enfermeras:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -372,14 +419,8 @@ app.post('/api/Enfermeras', async (req, res) => {
 app.post('/api/Medicamentos', async (req, res) => {
   try {
     const { nombre, marca, tipo, dosis, stock } = req.body;
-    
-    if (!nombre) {
-      return res.status(400).json({ error: 'El nombre del medicamento es obligatorio' });
-    }
-    
-    if (stock !== undefined && (isNaN(stock) || stock < 0)) {
-      return res.status(400).json({ error: 'El stock no puede ser negativo' });
-    }
+    if (!nombre) return res.status(400).json({ error: 'El nombre es obligatorio' });
+    if (stock !== undefined && (isNaN(stock) || stock < 0)) return res.status(400).json({ error: 'El stock no puede ser negativo' });
     
     const pool = await sql.connect(config);
     await pool.request()
@@ -392,7 +433,6 @@ app.post('/api/Medicamentos', async (req, res) => {
     
     res.json({ success: true, message: 'Medicamento agregado correctamente' });
   } catch (err) {
-    console.error('Error en POST /api/Medicamentos:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -400,14 +440,8 @@ app.post('/api/Medicamentos', async (req, res) => {
 app.post('/api/Citas', async (req, res) => {
   try {
     const { paciente_id, doctor_id, fecha_cita, hora_cita, proposito } = req.body;
-    
-    if (!paciente_id || !fecha_cita || !hora_cita) {
-      return res.status(400).json({ error: 'Paciente, fecha y hora son obligatorios' });
-    }
-    
-    if (!validarFechaFutura(fecha_cita)) {
-      return res.status(400).json({ error: 'La fecha de la cita debe ser hoy o futura' });
-    }
+    if (!paciente_id || !fecha_cita || !hora_cita) return res.status(400).json({ error: 'Paciente, fecha y hora son obligatorios' });
+    if (!validarFechaFutura(fecha_cita)) return res.status(400).json({ error: 'La fecha debe ser hoy o futura' });
     
     const pool = await sql.connect(config);
     await pool.request()
@@ -421,22 +455,35 @@ app.post('/api/Citas', async (req, res) => {
     
     res.json({ success: true, message: 'Cita agregada correctamente' });
   } catch (err) {
-    console.error('Error en POST /api/Citas:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-// ==========================================================
-// RUTAS PUT - CON VALIDACIONES
-// ==========================================================
+app.post('/api/habitaciones', async (req, res) => {
+  try {
+    const { numero, tipo_id, capacidad, estado } = req.body;
+    if (!numero) return res.status(400).json({ error: 'El número de habitación es obligatorio' });
+    
+    const pool = await sql.connect(config);
+    await pool.request()
+      .input('numero_habitacion', sql.VarChar, numero)
+      .input('tipo_habitacion_id', sql.Int, tipo_id || null)
+      .input('capacidad', sql.Int, capacidad || 1)
+      .input('estado', sql.NVarChar, estado || 'Disponible')
+      .query(`INSERT INTO dbo.Habitaciones (numero_habitacion, tipo_habitacion_id, capacidad, estado, ultimo_mantenimiento) VALUES (@numero_habitacion, @tipo_habitacion_id, @capacidad, @estado, GETDATE())`);
+    
+    res.json({ success: true, message: 'Habitación agregada correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT - Actualizar
 app.put('/api/pacientes/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, apellido, fecha_nacimiento, genero, ciudad_id, telefono, correo } = req.body;
-    
-    if (correo && !validarEmail(correo)) {
-      return res.status(400).json({ error: 'Formato de correo electrónico inválido' });
-    }
+    if (correo && !validarEmail(correo)) return res.status(400).json({ error: 'Formato de correo inválido' });
     
     const pool = await sql.connect(config);
     await pool.request()
@@ -452,7 +499,6 @@ app.put('/api/pacientes/:id', async (req, res) => {
     
     res.json({ success: true, message: 'Paciente actualizado correctamente' });
   } catch (err) {
-    console.error('Error en PUT /api/pacientes:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -461,10 +507,7 @@ app.put('/api/doctores/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, apellido, especialidad, telefono, correo, horario } = req.body;
-    
-    if (correo && !validarEmail(correo)) {
-      return res.status(400).json({ error: 'Formato de correo electrónico inválido' });
-    }
+    if (correo && !validarEmail(correo)) return res.status(400).json({ error: 'Formato de correo inválido' });
     
     const pool = await sql.connect(config);
     await pool.request()
@@ -479,7 +522,6 @@ app.put('/api/doctores/:id', async (req, res) => {
     
     res.json({ success: true, message: 'Doctor actualizado correctamente' });
   } catch (err) {
-    console.error('Error en PUT /api/doctores:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -488,10 +530,7 @@ app.put('/api/Medicamentos/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, marca, tipo, dosis, stock } = req.body;
-    
-    if (stock !== undefined && (isNaN(stock) || stock < 0)) {
-      return res.status(400).json({ error: 'El stock no puede ser negativo' });
-    }
+    if (stock !== undefined && (isNaN(stock) || stock < 0)) return res.status(400).json({ error: 'El stock no puede ser negativo' });
     
     const pool = await sql.connect(config);
     await pool.request()
@@ -505,7 +544,6 @@ app.put('/api/Medicamentos/:id', async (req, res) => {
     
     res.json({ success: true, message: 'Medicamento actualizado correctamente' });
   } catch (err) {
-    console.error('Error en PUT /api/Medicamentos:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -514,10 +552,7 @@ app.put('/api/Citas/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { paciente_id, doctor_id, fecha_cita, hora_cita, proposito } = req.body;
-    
-    if (fecha_cita && !validarFechaFutura(fecha_cita)) {
-      return res.status(400).json({ error: 'La fecha de la cita debe ser hoy o futura' });
-    }
+    if (fecha_cita && !validarFechaFutura(fecha_cita)) return res.status(400).json({ error: 'La fecha debe ser hoy o futura' });
     
     const pool = await sql.connect(config);
     await pool.request()
@@ -531,14 +566,31 @@ app.put('/api/Citas/:id', async (req, res) => {
     
     res.json({ success: true, message: 'Cita actualizada correctamente' });
   } catch (err) {
-    console.error('Error en PUT /api/Citas:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-// ==========================================================
-// RUTAS DELETE
-// ==========================================================
+app.put('/api/habitaciones/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { numero, tipo_id, capacidad, estado } = req.body;
+    
+    const pool = await sql.connect(config);
+    await pool.request()
+      .input('id', sql.Int, id)
+      .input('numero_habitacion', sql.VarChar, numero)
+      .input('tipo_habitacion_id', sql.Int, tipo_id || null)
+      .input('capacidad', sql.Int, capacidad || 1)
+      .input('estado', sql.NVarChar, estado || 'Disponible')
+      .query(`UPDATE dbo.Habitaciones SET numero_habitacion=@numero_habitacion, tipo_habitacion_id=@tipo_habitacion_id, capacidad=@capacidad, estado=@estado WHERE habitacion_id=@id`);
+    
+    res.json({ success: true, message: 'Habitación actualizada correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE - Eliminar
 app.delete('/api/pacientes/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -622,86 +674,28 @@ app.delete('/api/Citas/:id', async (req, res) => {
   }
 });
 
-// ==========================================================
-// EXPORTAR A EXCEL (CSV) - CON SEPARADOR PUNTO Y COMA
-// ==========================================================
-app.get('/api/exportar/:modulo', async (req, res) => {
+app.delete('/api/habitaciones/:id', async (req, res) => {
   try {
-    const { modulo } = req.params;
+    const { id } = req.params;
     const pool = await sql.connect(config);
-    
-    let query = '';
-    let filename = '';
-    
-    switch (modulo) {
-      case 'pacientes':
-        query = 'SELECT * FROM dbo.vw_Pacientes ORDER BY ID';
-        filename = 'pacientes.csv';
-        break;
-      case 'doctores':
-        query = 'SELECT * FROM dbo.vw_Doctores ORDER BY ID';
-        filename = 'doctores.csv';
-        break;
-      case 'enfermeras':
-        query = 'SELECT * FROM dbo.vw_Enfermeros ORDER BY ID';
-        filename = 'enfermeras.csv';
-        break;
-      case 'medicamentos':
-        query = 'SELECT * FROM dbo.vw_Medicamentos ORDER BY ID';
-        filename = 'medicamentos.csv';
-        break;
-      case 'citas':
-        query = 'SELECT * FROM dbo.vw_Citas ORDER BY Fecha DESC, Hora DESC';
-        filename = 'citas.csv';
-        break;
-      case 'habitaciones':
-        query = 'SELECT * FROM dbo.Habitaciones ORDER BY numero_habitacion';
-        filename = 'habitaciones.csv';
-        break;
-      default:
-        return res.status(400).json({ error: 'Módulo no válido' });
-    }
-    
-    const result = await pool.request().query(query);
-    const datos = result.recordset;
-    
-    if (datos.length === 0) {
-      return res.status(404).json({ error: 'No hay datos para exportar' });
-    }
-    
-    const cabeceras = Object.keys(datos[0]);
-    
-    // 🔥 Usar punto y coma (;) como separador para Excel en español
-    let csv = cabeceras.join(';') + '\n';
-    
-    datos.forEach(fila => {
-      const valores = cabeceras.map(c => {
-        let val = fila[c] ?? '';
-        val = String(val);
-        // Si tiene punto y coma, encerrar entre comillas
-        if (val.includes(';') || val.includes('"') || val.includes('\n')) {
-          val = '"' + val.replace(/"/g, '""') + '"';
-        }
-        return val;
-      });
-      csv += valores.join(';') + '\n';
-    });
-    
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.send('\uFEFF' + csv); // BOM para UTF-8
-    
+    await pool.request().input('id', sql.Int, id).query('DELETE FROM dbo.Habitaciones WHERE habitacion_id = @id');
+    res.json({ success: true, message: 'Habitación eliminada correctamente' });
   } catch (err) {
-    console.error('Error en exportar:', err.message);
-    res.status(500).json({ error: err.message });
+    if (err.message.includes('REFERENCE constraint')) {
+      res.status(400).json({ error: 'No se puede eliminar esta habitación porque tiene asignaciones pendientes.' });
+    } else {
+      res.status(500).json({ error: err.message });
+    }
   }
 });
+
 // ==========================================================
 // INICIAR SERVIDOR
 // ==========================================================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log('🏥 Sistema Hospitalario ANDAGON');
+  console.log('🔐 Sistema de login con roles activado');
   console.log('✅ Servidor corriendo en puerto:', PORT);
 });
 
