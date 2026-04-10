@@ -414,6 +414,142 @@ app.delete('/api/Citas/:id', async (req, res) => {
     }
   }
 });
+
+// ==========================================================
+// RUTAS PUT (Actualizar registros)
+// ==========================================================
+
+// Actualizar Paciente
+app.put('/api/pacientes/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nombre, apellido, fecha_nacimiento, genero, ciudad_id, telefono, correo } = req.body;
+    const pool = await sql.connect(config);
+    
+    await pool.request()
+      .input('id', sql.Int, id)
+      .input('primer_nombre', sql.NVarChar, nombre)
+      .input('apellido', sql.NVarChar, apellido)
+      .input('fecha_nacimiento', sql.Date, fecha_nacimiento)
+      .input('genero', sql.NVarChar, genero || null)
+      .input('Ciudad_Id', sql.Int, ciudad_id || null)
+      .input('numero_contacto', sql.NVarChar, telefono || null)
+      .input('correo_electronico', sql.NVarChar, correo || null)
+      .query(`
+        UPDATE dbo.Pacientes SET 
+          primer_nombre = @primer_nombre,
+          apellido = @apellido,
+          fecha_nacimiento = @fecha_nacimiento,
+          genero = @genero,
+          Ciudad_Id = @Ciudad_Id,
+          numero_contacto = @numero_contacto,
+          correo_electronico = @correo_electronico
+        WHERE paciente_id = @id
+      `);
+    
+    res.json({ success: true, message: 'Paciente actualizado correctamente' });
+  } catch (err) {
+    console.error('Error en PUT /api/pacientes:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Actualizar Doctor
+app.put('/api/doctores/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nombre, apellido, especialidad, telefono, correo, horario } = req.body;
+    const pool = await sql.connect(config);
+    
+    await pool.request()
+      .input('id', sql.Int, id)
+      .input('primer_nombre', sql.NVarChar, nombre)
+      .input('apellido', sql.NVarChar, apellido)
+      .input('especialidad', sql.NVarChar, especialidad)
+      .input('numero_contacto', sql.NVarChar, telefono || null)
+      .input('correo_electronico', sql.NVarChar, correo || null)
+      .input('horario_disponible', sql.NVarChar, horario || null)
+      .query(`
+        UPDATE dbo.Doctores SET 
+          primer_nombre = @primer_nombre,
+          apellido = @apellido,
+          especialidad = @especialidad,
+          numero_contacto = @numero_contacto,
+          correo_electronico = @correo_electronico,
+          horario_disponible = @horario_disponible
+        WHERE doctor_id = @id
+      `);
+    
+    res.json({ success: true, message: 'Doctor actualizado correctamente' });
+  } catch (err) {
+    console.error('Error en PUT /api/doctores:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Actualizar Medicamento
+app.put('/api/Medicamentos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nombre, marca, tipo, dosis, stock } = req.body;
+    const pool = await sql.connect(config);
+    
+    await pool.request()
+      .input('id', sql.Int, id)
+      .input('nombre', sql.NVarChar, nombre)
+      .input('marca', sql.NVarChar, marca || null)
+      .input('tipo', sql.NVarChar, tipo || null)
+      .input('dosis', sql.NVarChar, dosis || null)
+      .input('cantidad_stock', sql.Int, stock || 0)
+      .query(`
+        UPDATE dbo.Medicamentos SET 
+          nombre = @nombre,
+          marca = @marca,
+          tipo = @tipo,
+          dosis = @dosis,
+          cantidad_stock = @cantidad_stock
+        WHERE medicamento_id = @id
+      `);
+    
+    res.json({ success: true, message: 'Medicamento actualizado correctamente' });
+  } catch (err) {
+    console.error('Error en PUT /api/Medicamentos:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Actualizar Cita
+app.put('/api/Citas/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { paciente_id, doctor_id, fecha_cita, hora_cita, proposito } = req.body;
+    const pool = await sql.connect(config);
+    
+    await pool.request()
+      .input('id', sql.Int, id)
+      .input('paciente_id', sql.Int, paciente_id)
+      .input('doctor_id', sql.Int, doctor_id || null)
+      .input('fecha_cita', sql.Date, fecha_cita)
+      .input('hora_cita', sql.NVarChar, hora_cita)
+      .input('proposito', sql.NVarChar, proposito || null)
+      .query(`
+        UPDATE dbo.Citas SET 
+          paciente_id = @paciente_id,
+          doctor_id = @doctor_id,
+          fecha_cita = @fecha_cita,
+          hora_cita = @hora_cita,
+          proposito = @proposito
+        WHERE cita_id = @id
+      `);
+    
+    res.json({ success: true, message: 'Cita actualizada correctamente' });
+  } catch (err) {
+    console.error('Error en PUT /api/Citas:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 // ==========================================================
 // INICIAR SERVIDOR
 // ==========================================================

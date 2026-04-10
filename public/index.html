@@ -4,14 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistema Hospital ANDAGON</title>
-  <!-- Font Awesome para iconos -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <!-- CSS Externo -->
   <link rel="stylesheet" href="/css/estilo.css">
 </head>
 <body>
 
-<!-- ==================== HEADER ==================== -->
 <div class="header">
   <div class="header-inner">
     <i class="fas fa-hospital-user"></i>
@@ -22,34 +19,16 @@
   </div>
 </div>
 
-<!-- ==================== CONTENIDO PRINCIPAL ==================== -->
 <div class="main">
   
-  <!-- Tarjetas de Estadísticas -->
   <div class="stats">
-    <div class="stat">
-      <div class="stat-label"><i class="fas fa-user-injured"></i> Pacientes</div>
-      <div class="stat-val" id="s-pacientes">—</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label"><i class="fas fa-user-md"></i> Doctores</div>
-      <div class="stat-val" id="s-doctores">—</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label"><i class="fas fa-user-nurse"></i> Enfermeras</div>
-      <div class="stat-val" id="s-Enfermeras">—</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label"><i class="fas fa-pills"></i> Medicamentos</div>
-      <div class="stat-val" id="s-Medicamentos">—</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label"><i class="fas fa-calendar-check"></i> Citas</div>
-      <div class="stat-val" id="s-Citas">—</div>
-    </div>
+    <div class="stat"><div class="stat-label"><i class="fas fa-user-injured"></i> Pacientes</div><div class="stat-val" id="s-pacientes">—</div></div>
+    <div class="stat"><div class="stat-label"><i class="fas fa-user-md"></i> Doctores</div><div class="stat-val" id="s-doctores">—</div></div>
+    <div class="stat"><div class="stat-label"><i class="fas fa-user-nurse"></i> Enfermeras</div><div class="stat-val" id="s-Enfermeras">—</div></div>
+    <div class="stat"><div class="stat-label"><i class="fas fa-pills"></i> Medicamentos</div><div class="stat-val" id="s-Medicamentos">—</div></div>
+    <div class="stat"><div class="stat-label"><i class="fas fa-calendar-check"></i> Citas</div><div class="stat-val" id="s-Citas">—</div></div>
   </div>
 
-  <!-- Navegación por Pestañas -->
   <div class="nav">
     <button class="nav-btn active" onclick="cargar('pacientes', this)"><i class="fas fa-user-injured"></i> Pacientes</button>
     <button class="nav-btn" onclick="cargar('doctores', this)"><i class="fas fa-user-md"></i> Doctores</button>
@@ -58,40 +37,28 @@
     <button class="nav-btn" onclick="cargar('Citas', this)"><i class="fas fa-calendar-check"></i> Citas</button>
   </div>
 
-  <!-- Tarjeta de Tabla de Datos -->
   <div class="card">
     <div class="card-header">
       <div class="card-title" id="card-title">Pacientes</div>
       <span class="badge" id="count-badge">0 registros</span>
     </div>
-    <div id="contenido">
-      <div class="loading"><i class="fas fa-spinner fa-pulse"></i> Cargando datos...</div>
-    </div>
+    <div id="contenido"><div class="loading"><i class="fas fa-spinner fa-pulse"></i> Cargando datos...</div></div>
   </div>
 </div>
 
-<!-- ==================== BOTÓN FLOTANTE PARA INSERTAR ==================== -->
-<button class="fab-btn" onclick="abrirModal()">
-  <i class="fas fa-plus"></i>
-</button>
+<button class="fab-btn" onclick="abrirModal()"><i class="fas fa-plus"></i></button>
 
-<!-- ==================== MODAL DINÁMICO PARA FORMULARIOS ==================== -->
 <div class="modal" id="modalFormulario">
   <div class="modal-content">
-    <div class="modal-header">
-      <h3 id="modal-titulo"><i class="fas fa-plus-circle"></i> Nuevo Registro</h3>
-    </div>
+    <div class="modal-header"><h3 id="modal-titulo"><i class="fas fa-plus-circle"></i> Nuevo Registro</h3></div>
     <div class="modal-body" id="modal-body"></div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
-      <button class="btn btn-primary" id="btnGuardar" onclick="guardarRegistro()">
-        <i class="fas fa-save"></i> Guardar
-      </button>
+      <button class="btn btn-primary" id="btnGuardar" onclick="guardarRegistro()"><i class="fas fa-save"></i> Guardar</button>
     </div>
   </div>
 </div>
 
-<!-- ==================== JAVASCRIPT ==================== -->
 <script>
   let seccionActual = 'pacientes';
   let ciudadesDisponibles = [];
@@ -100,6 +67,7 @@
   let departamentosDisponibles = [];
   let pacientesDisponibles = [];
   let doctoresDisponibles = [];
+  let registroEditando = null;
 
   // ==================== CARGAR ESTADÍSTICAS ====================
   async function cargarStat(sec) {
@@ -142,9 +110,7 @@
 
   // ==================== ELIMINAR REGISTRO ====================
   async function eliminarRegistro(seccion, id) {
-    if (!confirm('¿Estás seguro de eliminar este registro? Esta acción no se puede deshacer.')) {
-      return;
-    }
+    if (!confirm('¿Estás seguro de eliminar este registro? Esta acción no se puede deshacer.')) return;
     
     try {
       const rutaAPI = seccion === 'Enfermeras' ? 'Enfermeras' : seccion;
@@ -156,10 +122,96 @@
         cargar(seccionActual, document.querySelector('.nav-btn.active'));
         cargarStat(seccionActual);
       } else {
-        alert('❌ Error: ' + (result.error || 'No se pudo eliminar'));
+        alert('❌ ' + (result.error || 'No se pudo eliminar'));
       }
     } catch (err) {
       alert('❌ Error de conexión: ' + err.message);
+    }
+  }
+
+  // ==================== EDITAR REGISTRO ====================
+  async function editarRegistro(seccion, id) {
+    registroEditando = { seccion, id };
+    
+    try {
+      const rutaAPI = seccion === 'Enfermeras' ? 'Enfermeros' : seccion;
+      const res = await fetch(`/api/${rutaAPI}`);
+      const datos = await res.json();
+      const registro = datos.find(d => (d.ID || d.id) === id);
+      
+      if (!registro) { alert('No se pudo cargar el registro'); return; }
+      
+      await abrirModal();
+      
+      setTimeout(() => {
+        const form = document.getElementById('formDinamico');
+        const campos = form.querySelectorAll('input, select');
+        
+        campos.forEach(campo => {
+          let valor = registro[campo.id] || registro[campo.id.charAt(0).toUpperCase() + campo.id.slice(1)];
+          if (valor !== undefined && valor !== null) {
+            if (campo.tagName === 'SELECT') {
+              const opciones = Array.from(campo.options);
+              const opcion = opciones.find(o => o.value == valor || o.text === valor);
+              if (opcion) campo.value = opcion.value;
+            } else {
+              campo.value = valor;
+            }
+          }
+        });
+        
+        document.getElementById('modal-titulo').innerHTML = `<i class="fas fa-edit"></i> Editar ${seccion.slice(0, -1)}`;
+        document.getElementById('btnGuardar').innerHTML = '<i class="fas fa-save"></i> Actualizar';
+        document.getElementById('btnGuardar').onclick = actualizarRegistro;
+      }, 100);
+      
+    } catch (err) {
+      alert('Error al cargar datos: ' + err.message);
+    }
+  }
+
+  async function actualizarRegistro() {
+    const form = document.getElementById('formDinamico');
+    const campos = form.querySelectorAll('input, select');
+    
+    const data = {};
+    campos.forEach(c => {
+      if (c.value.trim()) {
+        if (c.id === 'especialidad' && c.value === '__OTRA__') {
+          data[c.id] = document.getElementById('especialidad_manual').value;
+        } else if (c.id === 'especializacion' && c.value === '__OTRA__') {
+          data[c.id] = document.getElementById('especializacion_manual').value;
+        } else {
+          data[c.id] = c.value;
+        }
+      }
+    });
+    
+    try {
+      const { seccion, id } = registroEditando;
+      const rutaAPI = seccion === 'Enfermeras' ? 'Enfermeras' : seccion;
+      
+      const res = await fetch(`/api/${rutaAPI}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      
+      const result = await res.json();
+      
+      if (result.success) {
+        alert('✅ Registro actualizado correctamente');
+        cerrarModal();
+        cargar(seccionActual, document.querySelector('.nav-btn.active'));
+        cargarStat(seccionActual);
+        document.getElementById('btnGuardar').innerHTML = '<i class="fas fa-save"></i> Guardar';
+        document.getElementById('btnGuardar').onclick = guardarRegistro;
+        registroEditando = null;
+      } else {
+        alert('❌ Error: ' + result.error);
+      }
+    } catch (err) {
+      alert('❌ Error: ' + err.message);
     }
   }
 
@@ -193,17 +245,15 @@
       const cols = Object.keys(datos[0]);
       let html = '<div style="overflow-x:auto"><table><thead><tr>';
       cols.forEach(c => html += `<th>${c}</th>`);
-      html += '<th>Acciones</th>';
-      html += '</tr></thead><tbody>';
+      html += '<th>Acciones</th></tr></thead><tbody>';
       
       datos.forEach(fila => {
         html += '<tr>';
         cols.forEach(c => html += `<td>${fila[c] ?? ''}</td>`);
         const id = fila['ID'] || fila['id'] || fila[cols[0]];
         html += `<td class="acciones">
-          <button class="btn-delete" onclick="eliminarRegistro('${seccion}', ${id})">
-            <i class="fas fa-trash"></i> Eliminar
-          </button>
+          <button class="btn-edit" onclick="editarRegistro('${seccion}', ${id})"><i class="fas fa-edit"></i> Editar</button>
+          <button class="btn-delete" onclick="eliminarRegistro('${seccion}', ${id})"><i class="fas fa-trash"></i> Eliminar</button>
         </td>`;
         html += '</tr>';
       });
@@ -282,7 +332,9 @@
     const config = configs[seccionActual];
     if (!config) { alert('Formulario no disponible'); return; }
 
-    document.getElementById('modal-titulo').innerHTML = `<i class="fas fa-plus-circle"></i> ${config.titulo}`;
+    if (!registroEditando) {
+      document.getElementById('modal-titulo').innerHTML = `<i class="fas fa-plus-circle"></i> ${config.titulo}`;
+    }
     
     let html = '<form id="formDinamico">';
     config.campos.forEach(campo => {
@@ -338,7 +390,14 @@
     document.getElementById('modalFormulario').classList.add('active');
   }
 
-  function cerrarModal() { document.getElementById('modalFormulario').classList.remove('active'); }
+  function cerrarModal() { 
+    document.getElementById('modalFormulario').classList.remove('active');
+    if (registroEditando) {
+      document.getElementById('btnGuardar').innerHTML = '<i class="fas fa-save"></i> Guardar';
+      document.getElementById('btnGuardar').onclick = guardarRegistro;
+      registroEditando = null;
+    }
+  }
 
   // ==================== GUARDAR REGISTRO ====================
   async function guardarRegistro() {
