@@ -249,6 +249,11 @@ app.post('/api/Citas', async (req, res) => {
 // ==========================================================
 
 // Eliminar Paciente
+// ==========================================================
+// RUTAS DELETE (Con mensajes amigables para el usuario)
+// ==========================================================
+
+// Eliminar Paciente
 app.delete('/api/pacientes/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -259,7 +264,25 @@ app.delete('/api/pacientes/:id', async (req, res) => {
     res.json({ success: true, message: 'Paciente eliminado correctamente' });
   } catch (err) {
     console.error('Error en DELETE /api/pacientes:', err.message);
-    res.status(500).json({ error: err.message });
+    
+    // Mensaje personalizado según el tipo de error
+    if (err.message.includes('REFERENCE constraint')) {
+      if (err.message.includes('Citas')) {
+        res.status(400).json({ 
+          error: 'No se puede eliminar este paciente porque tiene citas médicas registradas. Elimine primero sus citas.' 
+        });
+      } else if (err.message.includes('Registros_Medicos')) {
+        res.status(400).json({ 
+          error: 'No se puede eliminar este paciente porque tiene registros médicos asociados.' 
+        });
+      } else {
+        res.status(400).json({ 
+          error: 'No se puede eliminar este registro porque tiene información relacionada en el sistema.' 
+        });
+      }
+    } else {
+      res.status(500).json({ error: err.message });
+    }
   }
 });
 
@@ -274,17 +297,29 @@ app.delete('/api/doctores/:id', async (req, res) => {
     res.json({ success: true, message: 'Doctor eliminado correctamente' });
   } catch (err) {
     console.error('Error en DELETE /api/doctores:', err.message);
-    res.status(500).json({ error: err.message });
+    
+    if (err.message.includes('REFERENCE constraint')) {
+      if (err.message.includes('Citas')) {
+        res.status(400).json({ 
+          error: 'No se puede eliminar este doctor porque tiene citas médicas programadas. Cancele o reasigne sus citas primero.' 
+        });
+      } else {
+        res.status(400).json({ 
+          error: 'No se puede eliminar este doctor porque tiene información relacionada en el sistema.' 
+        });
+      }
+    } else {
+      res.status(500).json({ error: err.message });
+    }
   }
 });
 
-// Eliminar Enfermera (elimina de Enfermeros y Personal)
+// Eliminar Enfermera
 app.delete('/api/Enfermeras/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const pool = await sql.connect(config);
     
-    // Primero obtener el personal_id
     const result = await pool.request()
       .input('enfermero_id', sql.Int, id)
       .query('SELECT personal_id FROM dbo.Enfermeros WHERE enfermero_id = @enfermero_id');
@@ -299,12 +334,10 @@ app.delete('/api/Enfermeras/:id', async (req, res) => {
     await transaction.begin();
     
     try {
-      // Eliminar de Enfermeros
       await transaction.request()
         .input('enfermero_id', sql.Int, id)
         .query('DELETE FROM dbo.Enfermeros WHERE enfermero_id = @enfermero_id');
       
-      // Eliminar de Personal
       await transaction.request()
         .input('personal_id', sql.Int, personal_id)
         .query('DELETE FROM dbo.Personal WHERE personal_id = @personal_id');
@@ -317,7 +350,14 @@ app.delete('/api/Enfermeras/:id', async (req, res) => {
     }
   } catch (err) {
     console.error('Error en DELETE /api/Enfermeras:', err.message);
-    res.status(500).json({ error: err.message });
+    
+    if (err.message.includes('REFERENCE constraint')) {
+      res.status(400).json({ 
+        error: 'No se puede eliminar esta enfermera porque tiene asignaciones pendientes en el sistema.' 
+      });
+    } else {
+      res.status(500).json({ error: err.message });
+    }
   }
 });
 
@@ -332,7 +372,24 @@ app.delete('/api/Medicamentos/:id', async (req, res) => {
     res.json({ success: true, message: 'Medicamento eliminado correctamente' });
   } catch (err) {
     console.error('Error en DELETE /api/Medicamentos:', err.message);
-    res.status(500).json({ error: err.message });
+    
+    if (err.message.includes('REFERENCE constraint')) {
+      if (err.message.includes('Farmacia')) {
+        res.status(400).json({ 
+          error: 'No se puede eliminar este medicamento porque tiene registros de dispensación en farmacia.' 
+        });
+      } else if (err.message.includes('Recetas')) {
+        res.status(400).json({ 
+          error: 'No se puede eliminar este medicamento porque está incluido en recetas médicas.' 
+        });
+      } else {
+        res.status(400).json({ 
+          error: 'No se puede eliminar este medicamento porque tiene información relacionada.' 
+        });
+      }
+    } else {
+      res.status(500).json({ error: err.message });
+    }
   }
 });
 
@@ -347,10 +404,16 @@ app.delete('/api/Citas/:id', async (req, res) => {
     res.json({ success: true, message: 'Cita eliminada correctamente' });
   } catch (err) {
     console.error('Error en DELETE /api/Citas:', err.message);
-    res.status(500).json({ error: err.message });
+    
+    if (err.message.includes('REFERENCE constraint')) {
+      res.status(400).json({ 
+        error: 'No se puede eliminar esta cita porque tiene facturación o registros médicos asociados.' 
+      });
+    } else {
+      res.status(500).json({ error: err.message });
+    }
   }
 });
-
 // ==========================================================
 // INICIAR SERVIDOR
 // ==========================================================
