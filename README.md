@@ -127,7 +127,7 @@ El sistema cuenta con **login por roles**:
 
 | Usuario | Contraseña | Rol | Permisos |
 |---------|-----------|-----|----------|
-| `Fredy` | `FHGG` | **Administrador** | ✅ CRUD completo en todos los módulos |
+| `Fredy` | `FHGG2005` | **Administrador** | ✅ CRUD completo en todos los módulos |
 | `Invitado` | `invitado123` | **Invitado** | 👁️ Solo lectura (vistas) |
 
 > 🔒 Las rutas POST, PUT y DELETE están protegidas con middleware de autenticación.
